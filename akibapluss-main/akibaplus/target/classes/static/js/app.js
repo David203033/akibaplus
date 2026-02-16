@@ -28,6 +28,9 @@ function loadPage(pageId) {
     if (pageId === 'dashboard') {
       initializeDashboardCharts();
     }
+    
+    // Save state
+    localStorage.setItem('akibaActivePage', pageId);
   }
 }
 
@@ -151,7 +154,7 @@ function submitDeposit() {
   .then(response => {
     if (response.ok) {
       alert('Amana imepokelewa kikamilifu!');
-      window.location.href = window.location.href; // Force reload to update balances
+      window.location.reload(); // Force reload to update balances
     } else {
       throw new Error('Imeshindwa kuweka akiba');
     }
@@ -607,7 +610,12 @@ function initAssetAllocationChart() {
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
-  initializeDashboardCharts();
+  const savedPage = localStorage.getItem('akibaActivePage');
+  if (savedPage) {
+    loadPage(savedPage);
+  } else {
+    initializeDashboardCharts();
+  }
   
   // Set default payment method
   selectPaymentMethod('mobile');

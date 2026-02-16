@@ -163,7 +163,7 @@ public class MemberService {
         
         for (Transaction t : entities) {
             Map<String, Object> map = new HashMap<>();
-            map.put("date", t.getDate());
+            map.put("date", t.getDate().format(DateTimeFormatter.ofPattern("dd MMM yyyy")));
             map.put("type", t.getType());
             map.put("description", t.getDescription());
             map.put("amount", "TZS " + String.format("%,.0f", t.getAmount()));

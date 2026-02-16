@@ -308,12 +308,7 @@ public class MemberApiController {
                  return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Kiasi lazima kiwe zaidi ya 0"));
             }
             
-            BigDecimal current = member.getSavingsBalance() != null ? member.getSavingsBalance() : BigDecimal.ZERO;
-            member.setSavingsBalance(current.add(amount));
-            
-            memberRepository.save(member);
-            recordTransaction(member, "AMANA", "Amana ya Fedha", amount, member.getSavingsBalance());
-            System.out.println("[MemberApiController] deposit recorded: memberId=" + member.getId() + " newBalance=" + member.getSavingsBalance());
+            memberService.deposit(email, amount, "Amana ya Fedha");
             
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
