@@ -1,0 +1,3127 @@
+<!DOCTYPE html>
+<html lang="sw" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AkibaPlus SACCOS</title>
+
+  <!-- Libraries -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="icon" href="data:,">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.20/index.global.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1e40af;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --info: #0ea5e9;
+      --gray: #64748b;
+      --light: #f8fafc;
+      --dark: #1e293b;
+    }
+
+    body {
+      background: white;
+      font-family: system-ui, -apple-system, sans-serif;
+      margin: 0;
+      padding-bottom: 90px;
+    }
+
+    .navbar {
+      background: var(--primary) !important;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      height: 70px;
+    }
+
+    .sidebar {
+      width: 280px;
+      background: var(--dark);
+      color: #e2e8f0;
+      min-height: 100vh;
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 1000;
+      padding-top: 80px;
+      transition: transform 0.3s ease;
+    }
+
+    .sidebar .nav-link {
+      color: #cbd5e1;
+      padding: 7px 16px;
+      border-radius: 12px;
+      margin: 5px 16px;
+      font-weight: 500;
+      font-size: 1rem;
+      transition: all 0.3s;
+    }
+
+    .sidebar .nav-link:hover, .sidebar .nav-link.active {
+      background: #334155;
+      color: white;
+    }
+
+    .sidebar .nav-link i {
+      width: 28px;
+      font-size: 1.2rem;
+    }
+
+    .mobile-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      border-top: 1px solid #e2e8f0;
+      box-shadow: 0 -8px 30px rgba(0,0,0,0.08);
+      z-index: 1000;
+      padding: 10px 0;
+    }
+
+    .mobile-nav .nav-link {
+      color: var(--gray);
+      font-size: 0.8rem;
+      padding: 10px;
+      border-radius: 16px;
+    }
+
+    .mobile-nav .nav-link.active {
+      color: var(--primary);
+      background: rgba(37,99,235,0.1);
+    }
+
+    .mobile-nav i {
+      font-size: 1.5rem;
+      margin-bottom: 6px;
+    }
+
+    .main-content {
+      min-height: 100vh;
+      transition: margin-left 0.3s ease;
+    }
+
+    .page {
+      display: none;
+      animation: fadeIn 0.5s ease;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 6px 25px rgba(0,0,0,0.08);
+      transition: all 0.3s ease;
+      border: none;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    }
+
+    .stat-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+    }
+
+    .membership-card {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      border-radius: 24px;
+      color: white;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(37,99,235,0.3);
+    }
+
+    .notification-badge {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: var(--danger);
+      color: white;
+      font-size: 0.7rem;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    }
+
+    @media (max-width: 992px) {
+      .sidebar {
+        transform: translateX(-100%);
+      }
+      .main-content {
+        margin-left: 0 !important;
+      }
+      .sidebar.show {
+        transform: translateX(0);
+      }
+    }
+
+    @media (min-width: 993px) {
+      .mobile-nav, .mobile-menu-btn {
+        display: none !important;
+      }
+      .main-content {
+        margin-left: 280px;
+      }
+    }
+
+    .table-responsive {
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .fc-button {
+      background: var(--primary) !important;
+      border: none !important;
+    }
+
+       .period-card {
+      transition: all 0.3s ease;
+      border: 2px solid transparent;
+    }
+    .period-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 15px 35px rgba(0,0,0,0.12);
+    }
+    .period-card.active {
+      border-color: var(--primary);
+      background: rgba(37,99,235,0.05);
+      box-shadow: 0 10px 30px rgba(37,99,235,0.15);
+    }
+    .cursor-pointer {
+      cursor: pointer;
+    }
+    /* Reduce font sizes across the profile page (words, icons, numbers) */
+    #profile, #profile * {
+      font-size: 0.85rem !important;
+    }
+    /* Slightly larger for some card headers to keep hierarchy */
+    #profile .stat-card, #profile .membership-card {
+      font-size: 0.9rem !important;
+    }
+    /* Make profile picture placeholder smaller and responsive */
+    #profileImage {
+      width: 100px !important;
+      height: 100px !important;
+      max-width: 40vw;
+      max-height: 40vw;
+      object-fit: cover !important;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar with Notification Bell -->
+  <nav class="navbar navbar-dark fixed-top">
+    <div class="container-fluid">
+      <div class="d-flex align-items-center">
+        <button class="btn btn-link text-white mobile-menu-btn d-lg-none me-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas">
+          <i class="fas fa-bars fa-lg"></i>
+        </button>
+        <a class="navbar-brand fw-bold fs-4" href="#" onclick="loadPage('dashboard')">
+          AkibaPlus
+        </a>
+      </div>
+      <div class="d-flex align-items-center gap-4">
+        <span class="text-white small d-none d-md-block">
+          <i class="fas fa-calendar me-2"></i><span id="currentDate"></span>
+        </span>
+
+        <!-- Notification Bell -->
+        <div class="dropdown position-relative">
+          <a class="text-white position-relative" href="#" role="button" data-bs-toggle="dropdown">
+            <i class="fas fa-bell fa-xl"></i>
+            <span class="notification-badge" id="notificationCount" th:text="${notificationCount}">4</span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end shadow-lg p-0" style="width: 350px;">
+            <li class="dropdown-header bg-primary text-white py-3 px-4">
+              <h6 class="mb-0 fw-bold">Arifa Mpya <span class="badge bg-light text-primary ms-2">4</span></h6>
+            </li>
+            <div style="max-height: 400px; overflow-y: auto;">
+              <li th:each="notif : ${notifications}" th:if="${notif != null}"><a class="dropdown-item py-3 border-bottom" href="#">
+                <div class="d-flex">
+                  <div th:class="'bg-' + ${notif.color ?: 'primary'} + ' bg-opacity-20 text-' + ${notif.color ?: 'primary'} + ' p-3 rounded me-3'">
+                    <i th:class="${notif.icon ?: 'fas fa-bell'}"></i>
+                  </div>
+                  <div>
+                    <p class="mb-1 fw-semibold" th:text="${notif.title}">Title</p>
+                    <small class="text-muted" th:text="${notif.desc}">Description</small>
+                  </div>
+                  <div>
+                  </div>
+                </div>
+              </a></li>
+            </div>
+            <li class="dropdown-footer text-center py-3 bg-light">
+              <a href="#" class="text-primary small fw-semibold">Angalia Arifa Zote →</a>
+            </li>
+          </ul>
+        </div>
+
+        <!-- User Dropdown -->
+        <div class="dropdown">
+          <a class="text-white dropdown-toggle d-flex align-items-center gap-2" href="#" role="button" data-bs-toggle="dropdown" style="text-decoration: none;">
+            <img th:src="${profileImageUrl != null ? profileImageUrl : 'https://placehold.co/40/ffffff/2563eb?text=' + #strings.substring(memberName,0,1)}" class="rounded-circle border border-2 border-white" width="40" height="40" alt="Profile" style="object-fit: cover;">
+            <span class="d-none d-md-inline fw-medium" th:text="${memberName ?: 'Member'}">John Doe</span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end shadow-lg">
+            <li><a class="dropdown-item py-2" href="#" onclick="loadPage('profile'); return false;"><i class="fas fa-user me-3"></i>Profile</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item text-danger py-2" th:href="@{/logout}"><i class="fas fa-sign-out-alt me-3"></i>Logout</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Desktop Sidebar -->
+  <aside class="sidebar d-none d-lg-block">
+    <ul class="nav flex-column p-4">
+      <li class="nav-item mb-2"><a href="#" class="nav-link active" onclick="loadPage('dashboard')"><i class="fas fa-home"></i> Dashboard</a></li>
+      <li class="nav-item mb-2"><a href="#" class="nav-link" onclick="loadPage('savings')"><i class="fas fa-piggy-bank"></i> Savings</a></li>
+      <li class="nav-item mb-2"><a href="#" class="nav-link" onclick="loadPage('shares')"><i class="fas fa-chart-pie"></i> Shares</a></li>
+      <li class="nav-item mb-2"><a href="#" class="nav-link" onclick="loadPage('loans')"><i class="fas fa-money-bill-wave"></i> Loans</a></li>
+      <li class="nav-item mb-2"><a href="#" class="nav-link" onclick="loadPage('transactions')"><i class="fas fa-exchange-alt"></i> Transactions</a></li>
+      <li class="nav-item mb-2"><a href="#" class="nav-link" onclick="loadPage('statements')"><i class="fas fa-file-pdf"></i> Statements</a></li>
+      <li class="nav-item mb-2"><a href="#" class="nav-link" onclick="loadPage('guarantor-requests')"><i class="fas fa-handshake"></i> Guarantor</a></li>
+      <li class="nav-item mb-2"><a href="#" class="nav-link" onclick="loadPage('meetings')"><i class="fas fa-calendar-alt"></i> Meetings</a></li>
+      <li class="nav-item mb-2"><a href="#" class="nav-link" onclick="loadPage('penalties')"><i class="fas fa-exclamation-triangle"></i> Penalties</a></li>
+      <li class="nav-item mb-2"><a href="#" class="nav-link" onclick="loadPage('analytics')"><i class="fas fa-chart-line"></i> Analytics</a></li>
+      <li class="nav-item mb-2"><a href="#" class="nav-link" onclick="loadPage('profile')"><i class="fas fa-user-cog"></i> Profile</a></li>
+    </ul>
+  </aside>
+
+  <!-- Mobile Offcanvas Sidebar -->
+  <div class="offcanvas offcanvas-start sidebar" tabindex="-1" id="sidebarOffcanvas">
+    <div class="offcanvas-header border-bottom">
+      <h5 class="offcanvas-title text-white fw-bold">Menu</h5>
+      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body p-0">
+      <ul class="nav flex-column p-4">
+        <li class="nav-item mb-2"><a href="#" class="nav-link active" onclick="loadPage('dashboard')" data-bs-dismiss="offcanvas"><i class="fas fa-home"></i> Dashboard</a></li>
+        <li class="nav-item mb-2"><a href="#" class="nav-link" onclick="loadPage('savings')" data-bs-dismiss="offcanvas"><i class="fas fa-piggy-bank"></i> Savings</a></li>
+        <li class="nav-item mb-2"><a href="#" class="nav-link" onclick="loadPage('shares')" data-bs-dismiss="offcanvas"><i class="fas fa-chart-pie"></i> Shares</a></li>
+        <li class="nav-item mb-2"><a href="#" class="nav-link" onclick="loadPage('loans')" data-bs-dismiss="offcanvas"><i class="fas fa-money-bill-wave"></i> Loans</a></li>
+        <li class="nav-item mb-2"><a href="#" class="nav-link" onclick="loadPage('transactions')" data-bs-dismiss="offcanvas"><i class="fas fa-exchange-alt"></i> Transactions</a></li>
+        <li class="nav-item mb-2"><a href="#" class="nav-link" onclick="loadPage('statements')" data-bs-dismiss="offcanvas"><i class="fas fa-file-pdf"></i> Statements</a></li>
+        <li class="nav-item mb-2"><a href="#" class="nav-link" onclick="loadPage('guarantor-requests')" data-bs-dismiss="offcanvas"><i class="fas fa-handshake"></i> Guarantor</a></li>
+        <li class="nav-item mb-2"><a href="#" class="nav-link" onclick="loadPage('meetings')" data-bs-dismiss="offcanvas"><i class="fas fa-calendar-alt"></i> Meetings</a></li>
+        <li class="nav-item mb-2"><a href="#" class="nav-link" onclick="loadPage('penalties')" data-bs-dismiss="offcanvas"><i class="fas fa-exclamation-triangle"></i> Penalties</a></li>
+        <li class="nav-item mb-2"><a href="#" class="nav-link" onclick="loadPage('analytics')" data-bs-dismiss="offcanvas"><i class="fas fa-chart-line"></i> Analytics</a></li>
+        <li class="nav-item mb-2"><a href="#" class="nav-link" onclick="loadPage('profile')" data-bs-dismiss="offcanvas"><i class="fas fa-user-cog"></i> Profile</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <main class="main-content pt-5 mt-5 mb-5">
+    <div class="container-fluid px-4">
+
+      <!-- DASHBOARD -->
+      <div id="dashboard" class="page active">
+        <div class="mb-5">
+          <h2 class="fw-bold text-dark mb-2">Karibu Tena, <span th:text="${memberName ?: 'Member'}">John</span>!</h2>
+          <p class="text-muted fs-5">Muhtasari wa akaunti yako</p>
+        </div>
+
+        <div class="row g-4 mb-5">
+          <div class="col-6 col-md-3">
+            <div class="stat-card p-4">
+              <div class="d-flex justify-content-between align-items-start">
+                <div>
+                  <p class="text-muted small mb-2">Akiba</p>
+                  <h4 class="fw-bold text-primary mb-0" th:text="'TZS ' + ${#numbers.formatDecimal(savingsBalance, 1, 'COMMA', 2, 'POINT')}">TZS 8.5M</h4>
+                </div>
+                <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+                  <i class="fas fa-piggy-bank"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="stat-card p-4">
+              <div class="d-flex justify-content-between align-items-start">
+                <div>
+                  <p class="text-muted small mb-2">Hisa</p>
+                  <h4 class="fw-bold text-success mb-0" th:text="'TZS ' + ${#numbers.formatDecimal(shareValue, 1, 'COMMA', 2, 'POINT')}">TZS 4.2M</h4>
+                </div>
+                <div class="stat-icon bg-success bg-opacity-10 text-success">
+                  <i class="fas fa-chart-pie"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="stat-card p-4">
+              <div class="d-flex justify-content-between align-items-start">
+                <div>
+                  <p class="text-muted small mb-2">Mikopo</p>
+                  <h4 class="fw-bold text-warning mb-0" th:text="'TZS ' + ${#numbers.formatDecimal(loanBalance, 1, 'COMMA', 0, 'POINT')}">TZS 1.2M</h4>
+                </div>
+                <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+                  <i class="fas fa-money-bill-wave"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="stat-card p-4">
+              <div class="d-flex justify-content-between align-items-start">
+                <div>
+                  <p class="text-muted small mb-2">Hali</p>
+                  <h5 class="fw-bold text-success mb-0" th:text="${memberStatus}">Active</h5>
+                </div>
+                <div class="stat-icon bg-success bg-opacity-10 text-success">
+                  <i class="fas fa-check-circle"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-4 mb-5">
+          <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4">
+              <div class="card-header bg-transparent border-0 p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                  <h5 class="fw-bold mb-0">Shughuli za Hivi Karibuni</h5>
+                  <a href="#" class="text-primary small" onclick="loadPage('transactions')">Zote →</a>
+                </div>
+              </div>
+              <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                  <div class="list-group-item p-4" th:each="txn, iter : ${transactions}" th:if="${iter.index < 3 and txn != null}">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <div class="d-flex align-items-center gap-4">
+                        <div th:class="'p-4 rounded-circle ' + (${txn.type == 'AMANA'} ? 'bg-success bg-opacity-10 text-success' : 'bg-danger bg-opacity-10 text-danger')">
+                          <i th:class="${txn.type == 'AMANA'} ? 'fas fa-plus' : 'fas fa-minus'"></i>
+                        </div>
+                        <div>
+                          <p class="fw-bold mb-1" th:text="${txn.description}">Mchango wa Mwezi</p>
+                          <small class="text-muted" th:text="${txn.date}">27 Dec 2025</small>
+                        </div>
+                      </div>
+                      <span th:class="'fw-bold ' + (${txn.type == 'AMANA'} ? 'text-success' : 'text-danger')" th:text="${txn.amount}">+ TZS 500,000</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-4">
+            <div class="membership-card p-5 text-center mb-4">
+              <i class="fas fa-id-card fa-3x mb-4 opacity-80"></i>
+              <h4 class="fw-bold mb-4">Kadi ya Uanachama</h4>
+              <div class="bg-transparent bg-opacity-20 rounded-4 p-4 mb-4">
+                <small class="opacity-75">Namba ya Mwanachama</small>
+                <h4 class="fw-bold mb-0" th:text="${membershipNumber}">AKB2025001</h4>
+              </div>
+              <button class="btn btn-success btn-lg w-100 rounded-pill shadow" onclick="downloadMembershipCard()">
+                <i class="fas fa-download me-2"></i>Pakua Kadi
+              </button>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4">
+              <div class="card-header bg-transparent border-0 p-4">
+                <h5 class="fw-bold mb-0">Hatua za Haraka</h5>
+              </div>
+              <div class="card-body p-4 pt-0">
+                <button class="btn btn-primary w-100 mb-3 rounded-pill py-3 shadow" onclick="loadPage('loan-apply')">
+                  <i class="fas fa-file-invoice-dollar me-3"></i>Omba Mkopo
+                </button>
+                <button class="btn btn-success w-100 mb-3 rounded-pill py-3 shadow" data-bs-toggle="modal" data-bs-target="#depositModal">
+                  <i class="fas fa-piggy-bank me-3"></i>Weka Akiba
+                </button>
+                <button class="btn btn-outline-primary w-100 rounded-pill py-3" onclick="loadPage('profile')">
+                  <i class="fas fa-user me-3"></i>Sasisha Profile
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-4">
+          <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4">
+              <div class="card-header bg-transparent border-0 p-4">
+                <h5 class="fw-bold mb-0">Ukuaji wa Akiba</h5>
+              </div>
+              <div class="card-body p-4">
+                <canvas id="savingsChart" height="300"></canvas>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4">
+              <div class="card-header bg-transparent border-0 p-4">
+                <h5 class="fw-bold mb-0">Mgao wa Mali</h5>
+              </div>
+              <div class="card-body p-4">
+                <canvas id="distributionChart" height="300"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SAVINGS -->
+      <div id="savings" class="page">
+        <div class="mb-5">
+          <h2 class="fw-bold text-dark mb-2">Akaunti ya Akiba</h2>
+          <p class="text-muted fs-5">Dhibiti akiba yako na fuatilia michango</p>
+        </div>
+
+        <div class="row g-4 mb-5">
+          <div class="col-6 col-md-3">
+            <div class="stat-card p-4 text-center">
+              <div class="stat-icon bg-primary bg-opacity-10 text-primary mx-auto mb-3">
+                <i class="fas fa-wallet fa-lg"></i>
+              </div>
+              <h4 class="fw-bold text-primary mb-1" th:text="'TZS ' + ${#numbers.formatDecimal(savingsBalance, 1, 'COMMA', 2, 'POINT')}">TZS 8.5M</h4>
+              <small class="text-muted">Salio</small>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="stat-card p-4 text-center">
+              <div class="stat-icon bg-success bg-opacity-10 text-success mx-auto mb-3">
+                <i class="fas fa-percentage fa-lg"></i>
+              </div>
+              <h5 class="fw-bold text-success mb-1" th:text="'TZS ' + ${#numbers.formatDecimal(interestEarned, 1, 'COMMA', 2, 'POINT')}">TZS 425K</h5>
+              <small class="text-muted">Riba</small>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="stat-card p-4 text-center">
+              <div class="stat-icon bg-info bg-opacity-10 text-info mx-auto mb-3">
+                <i class="fas fa-coins fa-lg"></i>
+              </div>
+              <h5 class="fw-bold text-info mb-1" th:text="${depositCount}">127</h5>
+              <small class="text-muted">Amana</small>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="stat-card p-4 text-center">
+              <div class="stat-icon bg-warning bg-opacity-10 text-warning mx-auto mb-3">
+                <i class="fas fa-calendar-check fa-lg"></i>
+              </div>
+              <h6 class="fw-bold text-warning mb-1" th:text="${joinDate}">Jan 2023</h6>
+              <small class="text-muted">Tangu</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4">
+          <div class="card-header bg-transparent border-0 p-4">
+            <div class="d-flex justify-content-between align-items-center">
+              <h5 class="fw-bold mb-0">Historia ya Shughuli</h5>
+              <div class="btn-group">
+                <button class="btn btn-primary rounded-pill" data-bs-toggle="modal" data-bs-target="#depositModal">
+                  <i class="fas fa-plus me-2"></i>Weka
+                </button>
+                <button class="btn btn-warning rounded-pill" data-bs-toggle="modal" data-bs-target="#withdrawModal">
+                  <i class="fas fa-minus me-2"></i>Toa
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover mb-0">
+                <thead class="bg-light">
+                  <tr>
+                    <th>Tarehe</th>
+                    <th>Aina</th>
+                    <th>Maelezo</th>
+                    <th>Kiasi</th>
+                    <th>Salio</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr th:each="txn : ${transactions}">
+                    <td th:text="${txn.date}">27 Dec 2025</td>
+                    <td><span th:class="'badge rounded-pill px-3 py-2 ' + (${txn.type == 'AMANA'} ? 'bg-success' : 'bg-danger')" th:text="${txn.type}">AMANA</span></td>
+                    <td th:text="${txn.description}">Mchango wa mwezi</td>
+                    <td th:class="${txn.type == 'AMANA'} ? 'text-success fw-bold' : 'text-danger fw-bold'" th:text="${txn.amount}">+ TZS 500,000</td>
+                    <td th:text="${txn.balance}">TZS 8,500,000</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SHARES -->
+      <div id="shares" class="page">
+        <div class="mb-5">
+          <h2 class="fw-bold text-dark mb-2">Akaunti ya Hisa</h2>
+          <p class="text-muted fs-5">Dhibiti umiliki wako wa hisa</p>
+        </div>
+
+        <div class="row g-4 mb-5">
+          <div class="col-6 col-md-3">
+            <div class="stat-card p-4 text-center">
+              <div class="stat-icon bg-success bg-opacity-10 text-success mx-auto mb-3">
+                <i class="fas fa-coins fa-lg"></i>
+              </div>
+              <h4 class="fw-bold text-success mb-1" th:text="'TZS ' + ${#numbers.formatDecimal(shareValue, 1, 'COMMA', 2, 'POINT')}">TZS 4.2M</h4>
+              <small class="text-muted">Thamani ya Hisa</small>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="stat-card p-4 text-center">
+              <div class="stat-icon bg-info bg-opacity-10 text-info mx-auto mb-3">
+                <i class="fas fa-hashtag fa-lg"></i>
+              </div>
+              <h5 class="fw-bold text-info mb-1" th:text="${shareCount}">42</h5>
+              <small class="text-muted">Idadi ya Hisa</small>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="stat-card p-4 text-center">
+              <div class="stat-icon bg-warning bg-opacity-10 text-warning mx-auto mb-3">
+                <i class="fas fa-gift fa-lg"></i>
+              </div>
+              <h5 class="fw-bold text-warning mb-1" th:text="'TZS ' + ${#numbers.formatDecimal(dividends, 1, 'COMMA', 2, 'POINT')}">TZS 210K</h5>
+              <small class="text-muted">Gawio</small>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="stat-card p-4 text-center">
+              <div class="stat-icon bg-primary bg-opacity-10 text-primary mx-auto mb-3">
+                <i class="fas fa-percentage fa-lg"></i>
+              </div>
+              <h5 class="fw-bold text-primary mb-1" th:text="${ownershipPercentage}">0.42%</h5>
+              <small class="text-muted">Umiliki</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-4">
+          <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4">
+              <div class="card-header bg-transparent border-0 p-4">
+                <h5 class="fw-bold mb-0">Ununuzi wa Hisa</h5>
+              </div>
+              <div class="card-body p-0">
+                <div class="table-responsive">
+                  <table class="table table-hover mb-0">
+                    <thead class="bg-light">
+                      <tr>
+                        <th>Tarehe</th>
+                        <th>Idadi</th>
+                        <th>Bei kwa Hisa</th>
+                        <th>Jumla</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr th:each="shareTxn : ${shareTransactions}" th:if="${shareTxn != null}">
+                        <td th:text="${shareTxn.date}"></td>
+                        <td th:text="${shareTxn.quantity}"></td>
+                        <td th:text="${shareTxn.price}"></td>
+                        <td class="fw-bold" th:text="${shareTxn.total}"></td>
+                      </tr>
+                      <tr th:if="${#lists.isEmpty(shareTransactions)}">
+                        <td colspan="4" class="text-center text-muted py-4">Hakuna ununuzi wa hisa uliorekodiwa.</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4">
+              <div class="card-header bg-transparent border-0 p-4">
+                <h5 class="fw-bold mb-0">Hatua za Haraka</h5>
+              </div>
+              <div class="card-body p-4">
+                <button class="btn btn-success w-100 mb-3 rounded-pill py-3 shadow" data-bs-toggle="modal" data-bs-target="#buySharesModal">
+                  <i class="fas fa-plus-circle me-3"></i>Nunua Hisa
+                </button>
+                <button class="btn btn-outline-danger w-100 rounded-pill py-3" data-bs-toggle="modal" data-bs-target="#sellSharesModal">
+                  <i class="fas fa-minus-circle me-3"></i>Uza Hisa
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+            <!-- LOANS -->
+      <div id="loans" class="page">
+        <div class="mb-5">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h2 class="fw-bold text-dark mb-2">Mikopo Yangu</h2>
+              <p class="text-muted fs-5">Dhibiti mikopo yako na malipo</p>
+            </div>
+            <button class="btn btn-warning btn-lg rounded-pill px-5 shadow" onclick="loadPage('loan-apply')">
+              <i class="fas fa-plus me-2"></i>Omba Mkopo
+            </button>
+          </div>
+        </div>
+
+        <div class="row g-4 mb-5">
+          <div class="col-6 col-md-3">
+            <div class="stat-card p-4 text-center">
+              <div class="stat-icon bg-danger bg-opacity-10 text-danger mx-auto mb-3">
+                <i class="fas fa-exclamation-triangle fa-lg"></i>
+              </div>
+              <h4 class="fw-bold text-danger mb-1" th:text="'TZS ' + ${#numbers.formatDecimal(loanBalance, 1, 'COMMA', 0, 'POINT')}">TZS 1.2M</h4>
+              <small class="text-muted">Salio la Mkopo</small>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="stat-card p-4 text-center">
+              <div class="stat-icon bg-info bg-opacity-10 text-info mx-auto mb-3">
+                <i class="fas fa-calendar-times fa-lg"></i>
+              </div>
+              <h5 class="fw-bold text-info mb-1" th:text="'TZS ' + ${#numbers.formatDecimal(nextPaymentAmount, 1, 'COMMA', 0, 'POINT')}">TZS 150K</h5>
+              <small class="text-muted">Malipo Yanayofuata</small>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="stat-card p-4 text-center">
+              <div class="stat-icon bg-success bg-opacity-10 text-success mx-auto mb-3">
+                <i class="fas fa-credit-card fa-lg"></i>
+              </div>
+              <h5 class="fw-bold text-success mb-1" th:text="'TZS ' + ${#numbers.formatDecimal(loanLimit, 1, 'COMMA', 0, 'POINT')}">TZS 15M</h5>
+              <small class="text-muted">Kikomo cha Mkopo</small>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="stat-card p-4 text-center">
+              <div class="stat-icon bg-primary bg-opacity-10 text-primary mx-auto mb-3">
+                <i class="fas fa-star fa-lg"></i>
+              </div>
+              <h5 class="fw-bold text-primary mb-1" th:text="${creditScore}">95%</h5>
+              <small class="text-muted">Alama ya Malipo</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4">
+          <div class="card-header bg-transparent border-0 p-4">
+            <h5 class="fw-bold mb-0">Rekodi za Mikopo Yako</h5>
+          </div>
+          <div class="card-body p-4">
+            <div class="row g-4">
+              <div class="col-12" th:each="loan : ${loans}" th:if="${loan != null}">
+                <div class="card border-0 shadow-sm">
+                  <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                      <div>
+                        <h5 class="fw-bold mb-1" th:text="${loan.type} + (${loan.ref} != null ? ' - ' + ${loan.ref} : '')">Mkopo wa Kibinafsi - L2025-001</h5>
+                        <small class="text-muted" th:text="'Umepewa: ' + ${loan.date}">Umepewa: 01 Dec 2025</small>
+                      </div>
+                      <span class="badge bg-success fs-6 px-4 py-2" th:text="${loan.status}">INAYOTUMIKA</span>
+                    </div>
+                    <div class="row mb-3">
+                      <div class="col-md-3">
+                        <small class="text-muted">Kiasi cha Msingi</small>
+                        <p class="fw-bold" th:text="'TZS ' + ${#numbers.formatDecimal(loan.amount, 1, 'COMMA', 0, 'POINT')}">TZS 800,000</p>
+                      </div>
+                      <div class="col-md-3">
+                        <small class="text-muted">Salio</small>
+                        <p class="fw-bold text-danger" th:text="'TZS ' + ${#numbers.formatDecimal(loan.balance, 1, 'COMMA', 0, 'POINT')}">TZS 700,000</p>
+                      </div>
+                      <div class="col-md-3">
+                        <small class="text-muted">Malipo Yanayofuata</small>
+                        <p class="fw-bold text-info" th:text="'TZS ' + ${#numbers.formatDecimal(loan.nextPayment, 1, 'COMMA', 0, 'POINT')}">TZS 100,000</p>
+                      </div>
+                      <div class="col-md-3">
+                        <small class="text-muted">Tarehe ya Kurejesha</small>
+                        <p class="fw-bold text-dark" th:text="${loan.date} ?: '-'">01 Dec 2026</p>
+                      </div>
+                    </div>
+                    <div class="progress mb-3" style="height: 12px;">
+                      <div class="progress-bar bg-success" th:style="'width: ' + ${loan.progress} + '%'"></div>
+                    </div>
+                    <div class="d-flex gap-3">
+                      <button class="btn btn-primary rounded-pill px-4" 
+                              th:data-id="${loan.id}"
+                              th:data-ref="${loan.ref}"
+                              th:data-balance="${loan.balance}"
+                              th:data-nextpayment="${loan.nextPayment}"
+                              onclick="initiateLoanPayment(this)">Lipa Sasa</button>
+                      <button class="btn btn-outline-secondary rounded-pill px-4" 
+                              th:data-type="${loan.type}"
+                              th:data-ref="${loan.ref}"
+                              th:data-date="${loan.date}"
+                              th:data-duedate="${loan.date}"
+                              th:data-status="${loan.status}"
+                              th:data-amount="${loan.amount}"
+                              th:data-balance="${loan.balance}"
+                              th:data-progress="${loan.progress}"
+                              onclick="showLoanDetails(this)">Maelezo</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+     <!-- LOAN APPLY - Multi-Step Form -->
+     <div id="loan-apply" class="page">
+      <div class="mb-5">
+        <a href="#" class="btn btn-outline-primary btn-sm mb-3" onclick="loadPage('loans')">
+          <i class="fas fa-arrow-left me-2"></i>Rudi
+        </a>
+        <h2 class="fw-bold text-dark mb-2">Omba Mkopo</h2>
+        <p class="text-muted fs-5">Kamilisha hatua kwa hatua ili kuomba mkopo</p>
+      </div>
+
+      <div class="row g-4">
+        <!-- Step Indicator -->
+        <div class="col-lg-3">
+          <div class="card border-0 shadow-sm rounded-4 sticky-top" style="top: 20px;">
+            <div class="card-body p-4">
+              <h5 class="fw-bold mb-4">Hatua za Maombi</h5>
+              <div class="d-flex flex-column gap-4" id="stepIndicator">
+                <div class="d-flex align-items-center gap-3 step-item active">
+                  <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">1</div>
+                  <span class="fw-medium">Ustahiki</span>
+                </div>
+                <div class="d-flex align-items-center gap-3 step-item">
+                  <div class="bg-light text-muted rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">2</div>
+                  <span class="text-muted">Maelezo ya Mkopo</span>
+                </div>
+                <div class="d-flex align-items-center gap-3 step-item">
+                  <div class="bg-light text-muted rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">3</div>
+                  <span class="text-muted">Hati Zinazohitajika</span>
+                </div>
+                <div class="d-flex align-items-center gap-3 step-item">
+                  <div class="bg-light text-muted rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">4</div>
+                  <span class="text-muted">Kagua na Wasilisha</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dynamic Content Area -->
+        <div class="col-lg-9">
+          <div class="card border-0 shadow-sm rounded-4">
+            <div id="stepContent">
+              <!-- Step 1: Eligibility -->
+              <div id="step1" class="step-content active">
+                <div class="card-header bg-transparent border-0 p-4">
+                  <h5 class="fw-bold mb-0">1. Angalia Ustahiki Wako</h5>
+                </div>
+                <div class="card-body p-4">
+                  <div th:if="${loanEligibility.isEligible()}" class="alert alert-success rounded-4 mb-4">
+                    <i class="fas fa-check-circle me-2 fa-2x"></i>
+                    Hongera! Unastahiki mkopo hadi <strong th:text="'TZS ' + ${#numbers.formatDecimal(loanLimit, 1, 'COMMA', 0, 'POINT')}">TZS 15,000,000</strong>
+                  </div>
+                  <div th:if="${!loanEligibility.isEligible()}" class="alert alert-danger rounded-4 mb-4">
+                    <h5 class="fw-bold"><i class="fas fa-times-circle me-2"></i>Hustahiki Kuomba Mkopo</h5>
+                    <p>Tafadhali rekebisha yafuatayo ili uweze kuomba mkopo:</p>
+                    <ul class="mb-0">
+                      <li th:each="reason : ${loanEligibility.reasons}" th:text="${reason}">Sababu ya kutostahili.</li>
+                    </ul>
+                  </div>
+
+                  <div class="row g-4">
+                    <div class="col-md-6">
+                      <div class="p-4 bg-light rounded-4">
+                        <p class="text-muted small mb-2">Kiasi cha Juu</p>
+                        <h5 class="fw-bold text-success" th:text="'TZS ' + ${#numbers.formatDecimal(loanLimit, 1, 'COMMA', 0, 'POINT')}">TZS 15,000,000</h5>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="p-4 bg-light rounded-4">
+                        <p class="text-muted small mb-2">Muda wa Uanachama</p>
+                        <h5 class="fw-bold" th:text="${membershipDuration}">3 miaka</h5>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="p-4 bg-light rounded-4">
+                        <p class="text-muted small mb-2">Salio la Akiba</p>
+                        <h5 class="fw-bold text-info" th:text="'TZS ' + ${#numbers.formatDecimal(savingsBalance, 1, 'COMMA', 0, 'POINT')}">TZS 8,500,000</h5>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="p-4 bg-light rounded-4">
+                        <p class="text-muted small mb-2">Alama ya Malipo</p>
+                        <h5 class="fw-bold text-success" th:text="${creditScore}">95%</h5>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="card-footer bg-light border-0 p-4 text-end">
+                  <button class="btn btn-primary btn-lg rounded-pill px-5" onclick="nextStep(2)" th:disabled="${!loanEligibility.isEligible()}">
+                    Endelea → <i class="fas fa-arrow-right ms-2"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Step 2: Loan Details - Added Collateral Section in Swahili -->
+              <div id="step2" class="step-content" style="display: none;">
+                <div class="card-header bg-transparent border-0 p-4">
+                  <h5 class="fw-bold mb-0">2. Jaza Maelezo ya Mkopo</h5>
+                </div>
+                <div class="card-body p-4">
+                  <div class="row g-4 mb-5">
+                    <div class="col-md-6">
+                      <label class="form-label fw-bold">Aina ya Mkopo</label>
+                      <select class="form-select form-select-lg" id="loanType">
+                        <option>Mkopo wa Kibinafsi</option>
+                        <option>Mkopo wa Biashara</option>
+                        <option>Mkopo wa Dharura</option>
+                        <option>Mkopo wa Elimu</option>
+                      </select>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label fw-bold">Kiasi Unachohitaji (TZS)</label>
+                      <input type="number" class="form-control form-control-lg" placeholder="Ingiza kiasi" max="15000000" id="loanAmount">
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label fw-bold">Muda wa Mkopo (miezi)</label>
+                      <select class="form-select form-select-lg" id="loanDuration">
+                        <option value="6">6 miezi</option>
+                        <option value="12">12 miezi</option>
+                        <option value="18">18 miezi</option>
+                        <option value="24">24 miezi</option>
+                      </select>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label fw-bold">Sababu ya Mkopo</label>
+                      <textarea class="form-control" rows="3" placeholder="Eleza kwa ufupi..." id="loanReason"></textarea>
+                    </div>
+                  </div>
+
+                  <!-- Collateral Section in Swahili -->
+                  <div class="card border-0 shadow-sm rounded-4">
+                    <div class="card-header bg-transparent border-0 p-4">
+                      <h5 class="fw-bold mb-0"><i class="fas fa-lock me-2 text-warning"></i>Dhamana (Lazima)</h5>
+                    </div>
+                    <div class="card-body p-4">
+                      <div class="form-check mb-4">
+                        <input class="form-check-input" type="checkbox" id="hasCollateral" onchange="toggleCollateral()">
+                        <label class="form-check-label fw-medium" for="hasCollateral">
+                          Weka Dhamana
+                        </label>
+                      </div>
+                      <div id="collateralSection" style="display: none;">
+                        <div class="row mb-4">
+                          <div class="col-md-6">
+                            <label for="collateralType" class="form-label fw-bold">Aina ya Dhamana</label>
+                            <select class="form-select form-select-lg" id="collateralType" name="collateralType">
+                              <option value="">Chagua aina</option>
+                              <option value="LAND">Ardhi/Mali</option>
+                              <option value="VEHICLE">Gari</option>
+                              <option value="EQUIPMENT">Vifaa</option>
+                              <option value="SHARES">Hisa</option>
+                              <option value="OTHER">Nyingine</option>
+                            </select>
+                          </div>
+                          <div class="col-md-6">
+                            <label for="collateralValue" class="form-label fw-bold">Thamani Inayokadiriwa (TZS)</label>
+                            <input type="number" class="form-control form-control-lg" id="collateralValue" name="collateralValue" placeholder="0">
+                          </div>
+                        </div>
+                        <div class="mb-4">
+                          <label for="collateralDesc" class="form-label fw-bold">Maelezo</label>
+                          <textarea class="form-control" id="collateralDesc" name="collateralDesc" rows="3" placeholder="Eleza maelezo ya dhamana..."></textarea>
+                        </div>
+                        <div class="mb-4">
+                          <label for="collateralDoc" class="form-label fw-bold">Hati ya Dhamana</label>
+                          <input type="file" class="form-control form-control-lg" id="collateralDoc" name="collateralDoc" accept=".pdf,.jpg,.jpeg,.png">
+                          <small class="text-muted">Pakia hati ya umiliki au mali (PDF/Picha)</small>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="card-footer bg-light border-0 p-4 d-flex justify-content-between">
+                  <button class="btn btn-outline-secondary rounded-pill px-4" onclick="nextStep(1)">← Rudi</button>
+                  <button class="btn btn-primary rounded-pill px-5" onclick="nextStep(3)">Endelea →</button>
+                </div>
+              </div>
+
+          <!-- Step 3: Documents - With Detailed Guarantor Explanation + References -->
+          <div id="step3" class="step-content" style="display: none;">
+            <div class="card-header bg-transparent border-0 p-4">
+              <h5 class="fw-bold mb-0">3. Hati Zinazohitajika</h5>
+            </div>
+            <div class="card-body p-4">
+              <div class="alert alert-info rounded-4 mb-4">
+                <i class="fas fa-info-circle me-2"></i>
+                Tafadhali chagua hali yako ya uajiri na kama unahitaji mdhamini ili tuonyeshe hati zinazohitajika.
+              </div>
+
+              <!-- Employment Status Selection -->
+              <div class="mb-5">
+                <label class="form-label fw-bold mb-3">Hali Yako ya Uajiri</label>
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <div class="border rounded-4 p-4 text-center cursor-pointer employment-option active-employment" onclick="selectEmployment('employed')">
+                      <i class="fas fa-briefcase fa-2x text-primary mb-3"></i>
+                      <h6 class="fw-bold">Nimeajiriwa</h6>
+                      <small class="text-muted">Nina mwajiri rasmi</small>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="border rounded-4 p-4 text-center cursor-pointer employment-option" onclick="selectEmployment('self-employed')">
+                      <i class="fas fa-user-tie fa-2x text-success mb-3"></i>
+                      <h6 class="fw-bold">Sijaajiriwa (Biashara Binafsi)</h6>
+                      <small class="text-muted">Ninafanya biashara binafsi</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Common Documents -->
+              <div class="mb-5">
+                <h6 class="fw-bold mb-4 text-primary"><i class="fas fa-file-alt me-2"></i>Hati za Msingi (Zinahitajika kwa Wote)</h6>
+                <div class="row g-4">
+                  <div class="col-md-6">
+                    <label class="form-label fw-medium">Kitambulisho (NIDA / Pasipoti)</label>
+                    <input type="file" class="form-control form-control-lg" id="idDoc" accept=".pdf,.jpg,.jpeg,.png" required>
+                    <small class="text-muted">Picha wazi ya kitambulisho</small>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label fw-medium">Picha ya Pasipoti</label>
+                    <input type="file" class="form-control form-control-lg" id="passportPhoto" accept=".jpg,.jpeg,.png" required>
+                    <small class="text-muted">Picha ya hivi karibuni</small>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Employed Documents -->
+              <div id="employedDocs">
+                <h6 class="fw-bold mb-4 text-primary"><i class="fas fa-building me-2"></i>Hati za Ziada kwa Waja</h6>
+                <div class="row g-4">
+                  <div class="col-md-6">
+                    <label class="form-label fw-medium">Barua ya Utambulisho kutoka Mwaji</label>
+                    <input type="file" class="form-control form-control-lg" id="employerLetter" accept=".pdf">
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label fw-medium">Taarifa za Mwaji</label>
+                    <input type="text" class="form-control form-control-lg" id="employerName" placeholder="Jina la Kampuni">
+                    <input type="text" class="form-control form-control-lg mt-2" placeholder="Anwani ya Mwaji">
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label fw-medium">Slips za Mshahara (Miezi 3)</label>
+                    <input type="file" class="form-control form-control-lg" id="paySlips" multiple accept=".pdf,.jpg">
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label fw-medium">Taarifa ya Benki (Miaka 3)</label>
+                    <input type="file" class="form-control form-control-lg" id="bankStatement" accept=".pdf">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Self-Employed Documents -->
+              <div id="selfEmployedDocs" style="display: none;">
+                <h6 class="fw-bold mb-4 text-success"><i class="fas fa-handshake me-2"></i>Hati za Ziada kwa Wasioaja</h6>
+                <div class="row g-4">
+                  <div class="col-md-6">
+                    <label class="form-label fw-medium">Barua kutoka Mwenyekiti wa Mtaa</label>
+                    <input type="file" class="form-control form-control-lg" id="localGovLetter" accept=".pdf,.jpg">
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label fw-medium">Uthibitisho wa Biashara</label>
+                    <input type="file" class="form-control form-control-lg" id="businessLicense" accept=".pdf,.jpg">
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label fw-medium">Anwani ya Makazi/Biashara</label>
+                    <textarea class="form-control form-control-lg" rows="3" placeholder="Andika anwani kwa undani..."></textarea>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label fw-medium">Taarifa ya Benki ya Biashara (Miaka 3)</label>
+                    <input type="file" class="form-control form-control-lg" id="businessBankStatement" accept=".pdf">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Guarantor Section with Detailed Explanation -->
+              <div class="mt-5">
+                <div class="card border-0 shadow-sm rounded-4">
+                  <div class="card-header bg-transparent border-0 p-4">
+                    <h6 class="fw-bold mb-0"><i class="fas fa-handshake me-2 text-info"></i>Mdhamini (Hiari – Inapendekezwa kwa Mikopo Mikubwa)</h6>
+                  </div>
+                  <div class="card-body p-4">
+                    <!-- Detailed Explanation -->
+                    <div class="alert alert-light border-start border-primary border-4 mb-4">
+                      <h6 class="fw-bold text-primary mb-3"><i class="fas fa-info-circle me-2"></i>Mdhamini ni nani na kwa nini anahitajika?</h6>
+                      <p class="mb-2">
+                        <strong>Mdhamini</strong> ni mwanachama mwingine wa AkibaPlus SACCOS anayekubali kuwajibika kwa mkopo wako endapo hutoweza kulipa.
+                      </p>
+                      <ul class="mb-2">
+                        <li>Anahitajika hasa kwa mikopo inayozidi <strong>TZS 5,000,000</strong></li>
+                        <li>Lazima awe na akaunti yenye hali nzuri na salio la kutosha</li>
+                        <li>Anapata arifa na anaweza kukubali au kukataa ombi lako</li>
+                        <li>Hakuna gharama za ziada kwa mdhamini – ni msaada wa kindugu tu</li>
+                      </ul>
+                      <p class="mb-0">
+                        <strong>Pendekezo:</strong> Kuwa na mdhamini huongeza sana nafasi za ombi lako kukubaliwa haraka.
+                      </p>
+                    </div>
+
+                    <div class="form-check mb-4">
+                      <input class="form-check-input" type="checkbox" id="hasGuarantor" onchange="toggleGuarantor()">
+                      <label class="form-check-label fw-medium" for="hasGuarantor">
+                        Nataka kuongeza mdhamini kwa ombi langu la mkopo
+                      </label>
+                    </div>
+
+                    <div id="guarantorSection" style="display: none;">
+                      <div class="row g-4">
+                        <div class="col-md-6">
+                          <label class="form-label fw-bold">Jina Kamili la Mdhamini</label>
+                          <input type="text" class="form-control form-control-lg" id="guarantorName" placeholder="Ingiza jina kamili">
+                        </div>
+                        <div class="col-md-6">
+                          <label class="form-label fw-bold">Namba ya Simu ya Mdhamini</label>
+                          <input type="tel" class="form-control form-control-lg" id="guarantorPhone" placeholder="+255 712 345 678">
+                        </div>
+                        <div class="col-md-6">
+                          <label class="form-label fw-bold">Namba ya Mwanachama (AkibaPlus)</label>
+                          <input type="text" class="form-control form-control-lg" id="guarantorMemberId" placeholder="e.g. AKB2024001">
+                          <small class="text-muted">Lazima awe mwanachama aliyesajiliwa</small>
+                        </div>
+                        <div class="col-md-6">
+                          <label class="form-label fw-bold">Uhusiano na Mdhamini</label>
+                          <select class="form-select form-select-lg" id="guarantorRel">
+                            <option>Ndugu / Dada</option>
+                            <option>Mke / Mume</option>
+                            <option>Mzazi</option>
+                            <option>Rafiki wa Karibu</option>
+                            <option>Mwajiri</option>
+                            <option>Mwingine</option>
+                          </select>
+                        </div>
+                        <div class="col-12">
+                          <label class="form-label fw-bold">Kitambulisho cha Mdhamini</label>
+                          <input type="file" class="form-control form-control-lg" id="guarantorDoc" accept=".pdf,.jpg,.jpeg,.png">
+                          <small class="text-muted">Pakia NIDA au Pasipoti ya mdhamini</small>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- References Section -->
+              <div class="mt-5">
+                <div class="card border-0 shadow-sm rounded-4">
+                  <div class="card-header bg-transparent border-0 p-4">
+                    <h6 class="fw-bold mb-0"><i class="fas fa-users me-2 text-secondary"></i>Marejeleo (References)</h6>
+                  </div>
+                  <div class="card-body p-4">
+                    <div class="alert alert-light border-start border-secondary border-4 mb-4">
+                      <p class="mb-0">
+                        <strong>Marejeleo</strong> ni watu wawili au zaidi wanaoweza kuthibitisha tabia yako nzuri, uwezo wa kulipa, na uaminifu wako. 
+                        Hawawezi kuwa jamaa wa damu au mdhamini wako.
+                      </p>
+                    </div>
+
+                    <div class="row g-4">
+                      <div class="col-12">
+                        <h6 class="fw-bold mb-3">Mrejeleo wa Kwanza</h6>
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label fw-medium">Jina Kamili</label>
+                        <input type="text" class="form-control form-control-lg" id="ref1Name" placeholder="Ingiza jina kamili">
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label fw-medium">Namba ya Simu</label>
+                        <input type="tel" class="form-control form-control-lg" id="ref1Phone" placeholder="+255 712 345 678">
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label fw-medium">Mahusiano (k.m. Rafiki, Mwajiri, Jirani)</label>
+                        <input type="text" class="form-control form-control-lg" id="ref1Rel" placeholder="Eleza uhusiano">
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label fw-medium">Muda wa Kumfahamu</label>
+                        <select class="form-select form-select-lg" id="ref1Time">
+                          <option>Chini ya mwaka 1</option>
+                          <option>Miaka 1-3</option>
+                          <option>Miaka 3-5</option>
+                          <option>Zaidi ya miaka 5</option>
+                        </select>
+                      </div>
+
+                      <div class="col-12 mt-4">
+                        <h6 class="fw-bold mb-3">Mrejeleo wa Pili</h6>
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label fw-medium">Jina Kamili</label>
+                        <input type="text" class="form-control form-control-lg" id="ref2Name" placeholder="Ingiza jina kamili">
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label fw-medium">Namba ya Simu</label>
+                        <input type="tel" class="form-control form-control-lg" id="ref2Phone" placeholder="+255 712 345 678">
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label fw-medium">Mahusiano</label>
+                        <input type="text" class="form-control form-control-lg" id="ref2Rel" placeholder="Eleza uhusiano">
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label fw-medium">Muda wa Kumfahamu</label>
+                        <select class="form-select form-select-lg" id="ref2Time">
+                          <option>Chini ya mwaka 1</option>
+                          <option>Miaka 1-3</option>
+                          <option>Miaka 3-5</option>
+                          <option>Zaidi ya miaka 5</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Optional Additional Documents -->
+              <div class="mt-5">
+                <h6 class="fw-bold mb-4 text-secondary"><i class="fas fa-plus-circle me-2"></i>Hati Zingine (Hiari)</h6>
+                <input type="file" class="form-control form-control-lg" id="otherDocs" multiple accept=".pdf,.jpg,.jpeg,.png">
+                <small class="text-muted">Pakia hati nyingine yoyote inayoweza kusaidia ombi lako</small>
+              </div>
+            </div>
+
+            <div class="card-footer bg-light border-0 p-4 d-flex justify-content-between">
+              <button class="btn btn-outline-secondary rounded-pill px-4" onclick="nextStep(2)">← Rudi</button>
+              <button class="btn btn-primary rounded-pill px-5" onclick="nextStep(4)">Endelea →</button>
+            </div>
+          </div>
+                          <!-- Step 4: Review & Submit - Professional with Full Terms Link -->
+          <div id="step4" class="step-content" style="display: none;">
+            <div class="card-header bg-transparent border-0 p-4">
+              <h5 class="fw-bold mb-0">4. Kagua na Wasilisha Ombi Lako la Mkopo</h5>
+            </div>
+            <div class="card-body p-4">
+
+              <!-- Important Notice -->
+              <div class="alert alert-primary rounded-4 mb-5 shadow-sm">
+                <i class="fas fa-lightbulb fa-2x me-3 float-start"></i>
+                <strong class="fs-5">Hongera!</strong><br>
+                Umekamilisha hatua zote za maombi. Tafadhali kagua maelezo yako kwa makini kabla ya kuwasilisha. 
+                Baada ya kuwasilisha, ombi litachakatwa ndani ya siku 3–7 za kazi.
+              </div>
+
+              <!-- Comprehensive Summary -->
+              <div class="card border-0 shadow-sm rounded-4 mb-5">
+                <div class="card-header bg-gradient bg-primary text-white rounded-top-4">
+                  <h6 class="fw-bold mb-0 py-3"><i class="fas fa-file-alt me-2"></i>Muhtasari Kamili wa Ombi Lako</h6>
+                </div>
+                <div class="card-body p-4">
+                  <div class="row g-4">
+                    <!-- Loan Details -->
+                    <div class="col-lg-6">
+                      <h6 class="fw-bold text-primary mb-3"><i class="fas fa-money-bill-wave me-2"></i>Maelezo ya Mkopo</h6>
+                      <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between py-3">
+                          <span class="fw-medium">Aina ya Mkopo</span>
+                          <strong id="reviewLoanType">Mkopo wa Kibinafsi</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between py-3">
+                          <span class="fw-medium">Kiasi Unachoomba</span>
+                          <strong class="text-success" id="reviewLoanAmount">TZS 5,000,000</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between py-3">
+                          <span class="fw-medium">Muda wa Mkopo</span>
+                          <strong id="reviewLoanDuration">12 miezi</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between py-3">
+                          <span class="fw-medium">Riba Inayotarajiwa (15% p.a.)</span>
+                          <strong id="reviewInterest">TZS 750,000</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between py-3 border-bottom-0">
+                          <span class="fw-medium text-danger">Malipo ya Kila Mwezi</span>
+                          <strong class="text-danger" id="reviewMonthlyPayment">TZS 479,167</strong>
+                        </li>
+                      </ul>
+                    </div>
+
+                    <!-- Collateral & Guarantor Summary -->
+                    <div class="col-lg-6">
+                      <h6 class="fw-bold text-primary mb-3"><i class="fas fa-shield-alt me-2"></i>Dhamana na Mdhamini</h6>
+                      <div class="bg-light rounded-4 p-4">
+                        <p class="mb-2" id="reviewCollateral"><strong>Dhamana:</strong> Hakuna</p>
+                        <p class="mb-2" id="reviewGuarantor"><strong>Mdhamini:</strong> Hakuna</p>
+                        <p class="mb-0 text-success"><i class="fas fa-check-circle me-2"></i>Ombi lako lina nguvu kubwa zaidi kwa kuwa na mdhamini na dhamana</p>
+                      </div>
+                    </div>
+
+                    <!-- References Summary -->
+                    <div class="col-12 mt-3">
+                      <h6 class="fw-bold text-primary mb-3"><i class="fas fa-users me-2"></i>Marejeleo Yako</h6>
+                      <div class="row g-3">
+                        <div class="col-md-6">
+                          <div class="border rounded-4 p-3 bg-light">
+                            <strong id="reviewRef1Name">1. Peter Paul</strong><br>
+                            <small id="reviewRef1Details">Rafiki wa Karibu • +255 713 456 789 • Amemfahamu zaidi ya miaka 5</small>
+                          </div>
+                        </div>
+                        <div class="col-md-6">
+                          <div class="border rounded-4 p-3 bg-light">
+                            <strong id="reviewRef2Name">2. Amina Hassan</strong><br>
+                            <small id="reviewRef2Details">Jirani • +255 784 567 890 • Amemfahamu miaka 7</small>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Terms & Conditions Summary -->
+              <div class="card border-0 shadow-sm rounded-4 mb-5">
+                <div class="card-header bg-gradient bg-info text-white rounded-top-4">
+                  <h6 class="fw-bold mb-0 py-3"><i class="fas fa-balance-scale me-2"></i>Masharti na Sheria za Mkopo – AkibaPlus SACCOS</h6>
+                </div>
+                <div class="card-body p-4">
+                  <p class="text-muted mb-4">
+                    Tunajivunia kuwa SACCOS inayoweka <strong>wanachama wetu kwanza</strong>. Hapa kuna muhtasari wa masharti yetu – yaliyoandikwa kwa lugha rahisi ili uelewe vizuri.
+                  </p>
+
+                  <ul class="list-group list-group-flush">
+                    <li class="list-group-item py-3">
+                      <i class="fas fa-check text-success me-3"></i>
+                      <strong>Riba ya Chini:</strong> Tunatoza riba ya chini kabisa (12–18% p.a.) ikilinganishwa na benki za kibiashara
+                    </li>
+                    <li class="list-group-item py-3">
+                      <i class="fas fa-check text-success me-3"></i>
+                      <strong>Hakuna Ada za Maombi:</strong> Kuomba mkopo ni bure kabisa – hatutozi chochote
+                    </li>
+                    <li class="list-group-item py-3">
+                      <i class="fas fa-check text-success me-3"></i>
+                      <strong>Malipo Yanayobadilika:</strong> Unaweza kulipa mapema bila adhabu yoyote
+                    </li>
+                    <li class="list-group-item py-3">
+                      <i class="fas fa-check text-success me-3"></i>
+                      <strong>Usaidizi wa Dharura:</strong> Kama una shida, tuandikie – tunaweza kurekebisha ratiba ya malipo
+                    </li>
+                    <li class="list-group-item py-3">
+                      <i class="fas fa-check text-success me-3"></i>
+                      <strong>Faragha Yako:</strong> Taarifa zako zinabaki siri – hatuzishiriki na mtu yeyote bila idhini yako
+                    </li>
+                    <li class="list-group-item py-3">
+                      <i class="fas fa-check text-success me-3"></i>
+                      <strong>Gawio la Ziada:</strong> Wanachama wanaolipa kwa wakati hupata gawio la ziada mwishoni mwa mwaka
+                    </li>
+                  </ul>
+
+                  <div class="mt-4 p-4 bg-light rounded-4 border-start border-primary border-4">
+                    <p class="mb-0">
+                      <strong>Tunakuahidi:</strong> AkibaPlus ni nyumbani kwako. Tunakupa mkopo kwa heshima, uwazi na upendo wa kindugu. 
+                      Hatutawahi kukukandamiza – tunataka ufanikiwe.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+
+              <!-- Agreement Checkbox -->
+              <div class="form-check form-switch form-check-reverse mt-5">
+                <input class="form-check-input" type="checkbox" id="agreeTerms" style="width: 60px; height: 30px;">
+                <label class="form-check-label fw-bold fs-5 text-dark" for="agreeTerms">
+                  Nimekubali <span class="text-primary">masharti na sheria</span> za AkibaPlus SACCOS
+                </label>
+              </div>
+              <small class="text-muted d-block mt-2">
+                Bofya hapa ili usome <a href="#" class="text-primary fw-medium" onclick="loadPage('terms-and-conditions')">masharti na sheria kamili</a>
+              </small>
+            </div>
+
+            <!-- Footer Buttons -->
+            <div class="card-footer bg-light border-0 p-4 d-flex justify-content-between align-items-center">
+              <button class="btn btn-outline-secondary btn-lg rounded-pill px-5" onclick="nextStep(3)">
+                ← Rudi Kukagua
+              </button>
+              <button class="btn btn-success btn-lg rounded-pill px-5 shadow-lg" onclick="submitLoanApplication()" id="submitBtn" disabled>
+                <i class="fas fa-paper-plane me-2"></i>Wasilisha Ombi Sasa
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Terms & Conditions Page -->
+<div id="terms-and-conditions" class="page card border-0 shadow-sm rounded-4" style="display: none;">
+  <div class="mb-5">
+    <a href="#" class="btn btn-outline-primary btn-sm mb-3" onclick="loadPage('loan-apply')">
+      <i class="fas fa-arrow-left me-2"></i>Rudi kwenye Maombi
+    </a>
+    <h2 class="fw-bold text-dark mb-2">Masharti na Sheria Kamili – AkibaPlus SACCOS</h2>
+    <p class="text-muted fs-5">Tumeyatengeneza masharti yetu kwa lugha rahisi ili kila mwanachama aelewe na ajisikie nyumbani.</p>
+  </div>
+
+  <div class="card border-0 shadow-sm rounded-4">
+    <div class="card-header bg-gradient bg-primary text-white rounded-top-4">
+      <h5 class="fw-bold mb-0 py-3">Masharti ya Mikopo ya AkibaPlus SACCOS</h5>
+    </div>
+    <div class="card-body p-5">
+      <div class="mb-5">
+        <h6 class="fw-bold text-primary mb-3"><i class="fas fa-home me-2"></i>1. AkibaPlus ni Nyumbani Kwako</h6>
+        <p class="text-muted">
+          AkibaPlus SACCOS ni chama cha kindugu kilichoundwa kwa ajili ya kukuza ustawi wa wanachama wetu. Tunakupa mkopo kwa <strong>heshima, uwazi, na upendo</strong>. 
+          Lengo letu si kukukandamiza, bali kukusaidia kufikia malengo yako ya kifedha.
+        </p>
+      </div>
+
+      <div class="mb-5">
+        <h6 class="fw-bold text-primary mb-3"><i class="fas fa-file-signature me-2"></i>2. Maombi ya Mkopo</h6>
+        <ul class="list-unstyled text-muted">
+          <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Unaweza kuomba mkopo ikiwa wewe ni mwanachama aliyesajiliwa na akaunti inayotumika.</li>
+          <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Hakuna ada ya maombi – ni bure kabisa.</li>
+          <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Ombi lako litachakatwa ndani ya siku 3–7 za kazi, na utapokea jibu kupitia SMS na app.</li>
+          <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Unatakiwa kuwasilisha hati za msingi (NIDA, picha, n.k.) na za ziada kulingana na hali yako ya uajiri.</li>
+        </ul>
+      </div>
+
+      <div class="mb-5">
+        <h6 class="fw-bold text-primary mb-3"><i class="fas fa-money-bill-wave me-2"></i>3. Riba na Malipo</h6>
+        <ul class="list-unstyled text-muted">
+          <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Riba yetu ni ya chini kabisa – kuanzia <strong>12% hadi 18% kwa mwaka</strong>, kulingana na aina ya mkopo.</li>
+          <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Unaweza kulipa mapema bila adhabu yoyote – tunakushukuru kwa kujali mkopo wako!</li>
+          <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Malipo ya kila mwezi yanapaswa kufanywa kwa wakati – ukiwa na shida, wasiliana nasi mapema.</li>
+          <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Kukosa kulipa kwa wakati kunaweza kusababisha adhabu ya <strong>2% ya kiasi kilichobaki</strong> kwa mwezi.</li>
+          <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Tunakupa chaguo za malipo rahisi: Benki, M-Pesa, Tigo Pesa, Airtel Money, na Halopesa.</li>
+        </ul>
+      </div>
+
+      <div class="mb-5">
+        <h6 class="fw-bold text-primary mb-3"><i class="fas fa-shield-alt me-2"></i>4. Dhamana</h6>
+        <ul class="list-unstyled text-muted">
+          <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Kutoa dhamana (k.m. ardhi, gari, hisa) ni hiari, lakini inaongeza nguvu ya ombi lako.</li>
+          <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Hati za dhamana zitahifadhiwa kwa usalama na hazitatumika isipokuwa kama umekosa kulipa mkopo wako.</li>
+          <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Thamani ya dhamana inapaswa kuwa angalau mara moja ya kiasi cha mkopo unaoomba.</li>
+        </ul>
+      </div>
+
+      <div class="mb-5">
+        <h6 class="fw-bold text-primary mb-3"><i class="fas fa-handshake me-2"></i>5. Mdhamini</h6>
+        <ul class="list-unstyled text-muted">
+          <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Mdhamini ni mwanachama mwingine wa AkibaPlus anayekubali kuwajibika kwa mkopo wako ikiwa hutoweza kulipa.</li>
+          <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Inapendekezwa kwa mikopo zaidi ya <strong>TZS 5,000,000</strong>, lakini ni hiari.</li>
+          <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Mdhamini atapokea arifa ya ombi lako na anaweza kukubali au kukataa.</li>
+          <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Hakuna gharama za ziada kwa mdhamini – ni msaada wa kindugu.</li>
+        </ul>
+      </div>
+
+      <div class="mb-5">
+        <h6 class="fw-bold text-primary mb-3"><i class="fas fa-users me-2"></i>6. Marejeleo</h6>
+        <ul class="list-unstyled text-muted">
+          <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Unatakiwa kutoa marejeleo mawili (sio jamaa wa damu wala mdhamini) wanaoweza kuthibitisha tabia yako na uwezo wa kulipa.</li>
+          <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Tunaweza kuwasiliana nao ikiwa ni muhimu, lakini taarifa zao zitabaki siri.</li>
+        </ul>
+      </div>
+
+      <div class="mb-5">
+        <h6 class="fw-bold text-primary mb-3"><i class="fas fa-lock me-2"></i>7. Faragha na Usalama</h6>
+        <ul class="list-unstyled text-muted">
+          <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Taarifa zako zote (hati, marejeleo, n.k.) zinahifadhiwa kwa usiri kamili.</li>
+          <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Hatuzishiriki na mtu yeyote isipokuwa kwa idhini yako au ikiwa sheria inatutaka.</li>
+          <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>App yetu inalindwa na teknolojia ya hali ya juu ya usimbaji fiche.</li>
+        </ul>
+      </div>
+
+      <div class="mb-5">
+        <h6 class="fw-bold text-primary mb-3"><i class="fas fa-gavel me-2"></i>8. Wajibu Wako kama Mwanachama</h6>
+        <ul class="list-unstyled text-muted">
+          <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Unakubali kulipa mkopo wako kwa wakati kulingana na ratiba iliyokubaliwa.</li>
+          <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Unatakiwa kutuambia mara moja ikiwa una shida ya kulipa au mabadiliko ya taarifa (k.m. namba ya simu).</li>
+          <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Kukosa kulipa kunaweza kusababisha hatua za kisheria, ikiwa ni pamoja na kumudu dhamana yako.</li>
+        </ul>
+      </div>
+
+      <div class="mb-5">
+        <h6 class="fw-bold text-primary mb-3"><i class="fas fa-heart me-2"></i>9. Gawio na Faida za Uanachama</h6>
+        <ul class="list-unstyled text-muted">
+          <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Wanachama wanaolipa mikopo yao kwa wakati hupata gawio la ziada mwishoni mwa mwaka.</li>
+          <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Unaweza kuomba mikopo ya ziada baada ya kulipa mkopo wako wa sasa kwa mafanikio.</li>
+          <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Tunatoa mafunzo ya bure ya kifedha kwa wanachama ili kukuza ujuzi wako.</li>
+        </ul>
+      </div>
+
+      <div class="mb-5">
+        <h6 class="fw-bold text-primary mb-3"><i class="fas fa-phone-alt me-2"></i>10. Kuwasiliana Nasi</h6>
+        <p class="text-muted">
+          Kama una swali lolote au unahitaji msaada, timu yetu iko hapa kwa ajili yako! Wasiliana nasi kupitia:
+        </p>
+        <ul class="list-unstyled text-muted">
+          <li class="mb-2"><i class="fas fa-envelope me-2"></i>Email: <a href="mailto:info@akibaplus.co.tz">info@akibaplus.co.tz</a></li>
+          <li class="mb-2"><i class="fas fa-phone me-2"></i>Simu: +255 712 000 000</li>
+          <li class="mb-2"><i class="fas fa-map-marker-alt me-2"></i>Anwani: Ofisi za AkibaPlus, Ghorofa ya 3, Jengo la Umoja, Mtaa wa Salaam, Dar es Salaam</li>
+        </ul>
+      </div>
+
+      <div class="p-4 bg-light rounded-4 border-start border-success border-4 text-center">
+        <h5 class="fw-bold text-success mb-3">Tunakuahidi Upendo wa Kindugu</h5>
+        <p class="mb-4">
+          AkibaPlus si chama tu – ni familia yako ya kifedha. Tunakupa mkopo kwa moyo wazi na tunakutakia mafanikio makubwa katika maisha yako.
+        </p>
+        <a href="#" class="btn btn-primary btn-lg rounded-pill px-5" onclick="loadPage('loan-apply')">
+          <i class="fas fa-arrow-left me-2"></i>Rudi kwenye Ombi Lako
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+          
+
+      <!-- LOAN DETAILS (Same as before - no change needed) -->
+      <div id="loan-details" class="page">
+        <div class="mb-5">
+          <a href="#" class="btn btn-outline-secondary btn-sm mb-3" onclick="loadPage('loans')">
+            <i class="fas fa-arrow-left me-2"></i>Rudi kwenye Mikopo
+          </a>
+          <h2 class="fw-bold text-dark mb-2">Maelezo ya Mkopo</h2>
+          <p class="text-muted fs-5">Taarifa kamili na ratiba ya malipo</p>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4 mb-5">
+          <div class="card-body p-4">
+            <div class="row align-items-center">
+              <div class="col-md-8">
+                <h4 class="fw-bold mb-3" id="detailType">Mkopo wa Kibinafsi</h4>
+                <div class="row g-4">
+                  <div class="col-md-3">
+                    <small class="text-muted">Rejea</small>
+                    <p class="fw-semibold" id="detailRef">L2025-001</p>
+                  </div>
+                  <div class="col-md-3">
+                    <small class="text-muted">Tarehe ya Kutoa</small>
+                    <p class="fw-semibold" id="detailDate">01 Dec 2025</p>
+                  </div>
+                  <div class="col-md-3">
+                    <small class="text-muted">Tarehe ya Kumaliza</small>
+                    <p class="fw-semibold" id="detailDueDate">01 Dec 2026</p>
+                  </div>
+                  <div class="col-md-3">
+                    <small class="text-muted">Hali</small>
+                    <p><span class="badge bg-success px-4 py-2" id="detailStatus">INAYOTUMIKA</span></p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="text-center">
+                  <small class="text-muted mb-2 d-block">Maendeleo ya Malipo</small>
+                  <div class="progress mb-3" style="height: 16px;">
+                    <div class="progress-bar bg-success" id="detailProgressBar" style="width: 0%"></div>
+                  </div>
+                  <h5 class="fw-bold" id="detailProgressText">0%</h5>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <ul class="nav nav-tabs mb-4">
+          <li class="nav-item">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#loan-summary">Muhtasari</button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#loan-schedule">Ratiba ya Malipo</button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#loan-payments">Historia ya Malipo</button>
+          </li>
+        </ul>
+
+        <div class="tab-content">
+          <div class="tab-pane fade show active" id="loan-summary">
+            <div class="row g-4">
+              <div class="col-lg-8">
+                <div class="card border-0 shadow-sm rounded-4">
+                  <div class="card-header bg-transparent border-0 p-4">
+                    <h5 class="fw-bold mb-0">Maelezo ya Kiasi</h5>
+                  </div>
+                  <div class="card-body p-4">
+                    <div class="row g-4">
+                      <div class="col-md-6">
+                        <p class="text-muted small mb-2">Kiasi cha Msingi</p>
+                        <h4 class="fw-bold" id="detailAmount">TZS 800,000</h4>
+                      </div>
+                      <div class="col-md-6">
+                        <p class="text-muted small mb-2">Riba Jumla</p>
+                        <h4 class="fw-bold text-warning" id="detailInterest">...</h4>
+                      </div>
+                      <div class="col-md-6">
+                        <p class="text-muted small mb-2">Jumla ya Kulipa</p>
+                        <h4 class="fw-bold text-info" id="detailTotalDue">...</h4>
+                      </div>
+                      <div class="col-md-6">
+                        <p class="text-muted small mb-2">Kiasi Kilicholipwa</p>
+                        <h4 class="fw-bold text-success" id="detailPaid">...</h4>
+                      </div>
+                      <div class="col-12">
+                        <p class="text-muted small mb-2">Salio Lililobaki</p>
+                        <h4 class="fw-bold text-danger" id="detailBalance">TZS 805,000</h4>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-4">
+                <div class="card border-0 shadow-sm rounded-4">
+                  <div class="card-header bg-transparent border-0 p-4">
+                    <h5 class="fw-bold mb-0">Hatua za Haraka</h5>
+                  </div>
+                  <div class="card-body p-4">
+                    <button class="btn btn-primary w-100 mb-3 rounded-pill py-3 shadow" onclick="loadPage('loan-payment')">
+                      <i class="fas fa-money-check me-3"></i>Lipa Sasa
+                    </button>
+                    <button class="btn btn-outline-secondary w-100 rounded-pill py-3">
+                      <i class="fas fa-download me-3"></i>Pakua Taarifa
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="tab-pane fade" id="loan-schedule">
+            <div class="card border-0 shadow-sm rounded-4">
+              <div class="card-body p-0">
+                <div class="table-responsive">
+                  <table class="table table-hover mb-0">
+                    <thead class="bg-light">
+                      <tr>
+                        <th>#</th>
+                        <th>Tarehe ya Malipo</th>
+                        <th>Msingi</th>
+                        <th>Riba</th>
+                        <th>Jumla</th>
+                        <th>Salio</th>
+                        <th>Hali</th>
+                      </tr>
+                    </thead>
+                    <tbody id="scheduleBody">
+                      <!-- Data itajazwa na JS -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="tab-pane fade" id="loan-payments">
+            <div class="card border-0 shadow-sm rounded-4">
+              <div class="card-body p-0">
+                <div class="table-responsive">
+                  <table class="table table-hover mb-0">
+                    <thead class="bg-light">
+                      <tr>
+                        <th>Tarehe</th>
+                        <th>Rejea</th>
+                        <th>Njia</th>
+                        <th>Kiasi</th>
+                      </tr>
+                    </thead>
+                    <tbody id="historyBody">
+                      <!-- Data itajazwa na JS -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+            <!-- LOAN PAYMENT - Fully Improved Payment Methods -->
+      <div id="loan-payment" class="page">
+        <div class="mb-5">
+          <a href="#" class="btn btn-outline-secondary btn-sm mb-3" onclick="loadPage('loans')">
+            <i class="fas fa-arrow-left me-2"></i>Rudi kwenye Mikopo
+          </a>
+          <h2 class="fw-bold text-dark mb-2">Lipa Mkopo</h2>
+          <p class="text-muted fs-5">Chagua njia ya malipo na simulia malipo</p>
+        </div>
+
+        <div class="row g-4">
+          <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4">
+              <div class="card-header bg-transparent border-0 p-4">
+                <h5 class="fw-bold mb-0">Maelezo ya Malipo</h5>
+              </div>
+              <div class="card-body p-4">
+                <div class="mb-4">
+                  <label class="form-label fw-bold">Chagua Mkopo</label>
+                  <select class="form-select form-select-lg" id="selectedLoan" onchange="updatePaymentSummary()">
+                    <option th:each="loan : ${loans}"
+                            th:if="${loan.status == 'ACTIVE' or loan.status == 'INAYOTUMIKA' or loan.status == 'PENDING'}" th:value="${loan.id}"
+                            th:data-balance="${loan.balance}"
+                            th:text="${loan.type} + ' - ' + (${loan.ref} ?: 'No Ref') + ' (Salio ' + ${loan.balance} + ')'"></option>
+                  </select>
+                </div>
+
+                <div class="mb-4">
+                  <label class="form-label fw-bold">Kiasi cha Malipo (TZS)</label>
+                  <div class="input-group input-group-lg">
+                    <span class="input-group-text">TZS</span>
+                    <input type="number" class="form-control text-center fs-4" id="paymentAmount" value="100000" min="1000" oninput="updatePaymentSummary()">
+                  </div>
+                </div>
+
+                <hr class="my-5">
+
+                <div class="mb-5">
+                  <label class="form-label fw-bold mb-4">Njia ya Malipo</label>
+                  <div class="row g-4">
+
+                    <!-- BANK PAYMENT -->
+                    <div class="col-md-6">
+                      <div class="border rounded-4 p-4 text-center cursor-pointer payment-method" id="bankMethod" onclick="selectPaymentMethod('bank')">
+                        <i class="fas fa-university fa-2x text-primary mb-3"></i>
+                        <h6 class="fw-bold">Malipo ya Benki</h6>
+                        <small class="text-muted">CRDB • NMB • NBC • Equity</small>
+                      </div>
+
+                      <div id="bankDetails" class="mt-4" style="display: none;">
+                        <div class="mb-3">
+                          <label class="form-label fw-medium">Chagua Benki</label>
+                          <select class="form-select form-select-lg" id="bankSelect">
+                            <option value="CRDB">CRDB Bank</option>
+                            <option value="NMB">NMB Bank</option>
+                            <option value="NBC">NBC Bank</option>
+                            <option value="Equity">Equity Bank</option>
+                            <option value="TPB">TPB Bank</option>
+                            <option value="Exim">Exim Bank</option>
+                            <option value="BOA">Bank of Africa</option>
+                          </select>
+                        </div>
+                        <div class="mb-3">
+                          <label class="form-label fw-medium">Namba ya Akaunti</label>
+                          <input type="text" class="form-control form-control-lg" id="bankAccount" placeholder="Ingiza namba ya akaunti yako">
+                        </div>
+                        <div class="alert alert-info small p-3">
+                          <i class="fas fa-info-circle me-2"></i>
+                          Malipo yatafanyika kwenye akaunti: <strong>01 5012345678</strong> (AkibaPlus SACCOS)
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- MOBILE WALLET -->
+                    <div class="col-md-6">
+                      <div class="border rounded-4 p-4 text-center cursor-pointer payment-method active-payment border-primary border-3" id="mobileMethod" onclick="selectPaymentMethod('mobile')">
+                        <i class="fas fa-mobile-alt fa-2x text-success mb-3"></i>
+                        <h6 class="fw-bold">Pochi ya Simu</h6>
+                        <small class="text-muted">M-Pesa • Tigo Pesa • Airtel Money • Halopesa</small>
+                      </div>
+
+                      <div id="mobileDetails" class="mt-4">
+                        <div class="mb-3">
+                          <label class="form-label fw-medium">Namba ya Simu</label>
+                          <input type="tel" class="form-control form-control-lg" id="mobileNumber" placeholder="+255 712 345 678" value="+255 712 345 678">
+                        </div>
+                        <div class="btn-group w-100" role="group">
+                          <button type="button" class="btn btn-success flex-fill py-3" onclick="setMobileNumber('+255 712 345 678', 'M-Pesa')">
+                            <i class="fab fa-m-pesa me-2"></i>M-Pesa
+                          </button>
+                          <button type="button" class="btn btn-warning flex-fill py-3" onclick="setMobileNumber('+255 765 432 109', 'Tigo Pesa')">
+                            <i class="fas fa-mobile me-2"></i>Tigo Pesa
+                          </button>
+                        </div>
+                        <div class="btn-group w-100 mt-2" role="group">
+                          <button type="button" class="btn btn-danger flex-fill py-3" onclick="setMobileNumber('+255 782 109 876', 'Airtel Money')">
+                            <i class="fas fa-mobile-alt me-2"></i>Airtel Money
+                          </button>
+                          <button type="button" class="btn btn-info flex-fill py-3" onclick="setMobileNumber('+255 620 000 000', 'Halopesa')">
+                            <i class="fas fa-wallet me-2"></i>Halopesa
+                          </button>
+                        </div>
+                        <div class="alert alert-info small p-3 mt-3">
+                          <i class="fas fa-info-circle me-2"></i>
+                          Malipo yatafanyika kwenye namba: <strong>+255 712 000 000</strong> (AkibaPlus SACCOS)
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+
+                <button class="btn btn-success btn-lg w-100 rounded-pill py-4 shadow" onclick="submitLoanPayment(this)">
+                  <i class="fas fa-paper-plane me-3"></i>Thibitisha Malipo
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Payment Summary Sidebar -->
+          <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4">
+              <div class="card-header bg-success text-white rounded-top-4 bg-opacity-0 p-3">
+                <h5 class="fw-bold mb-0">Muhtasari wa Malipo</h5>
+              </div>
+              <div class="card-body p-4">
+                <div class="mb-4">
+                  <p class="text-muted small mb-2">Kiasi cha Malipo</p>
+                  <h5 class="fw-bold text-white bg-success bg-opacity-0 rounded-4 p-3 text-center" id="summaryAmount">TZS 100,000</h5>
+                </div>
+                <hr class="border-white opacity-25">
+                <div class="mb-4">
+                  <p class="text-muted small mb-2">Salio Lililobaki</p>
+                  <h5 class="fw-bold" id="currentBalance" th:text="${loanBalance}">TZS 700,000</h5>
+                </div>
+                <div>
+                  <p class="text-muted small mb-2">Baada ya Malipo</p>
+                  <h5 class="fw-bold text-success" id="newBalance">TZS 600,000</h5>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TRANSACTIONS -->
+      <div id="transactions" class="page">
+        <div class="mb-5">
+          <h2 class="fw-bold text-dark mb-2">Shughuli Zote</h2>
+          <p class="text-muted fs-5">Orodha kamili ya shughuli za akaunti yako</p>
+        </div>
+
+        <div class="row g-4 mb-5">
+          <div class="col-6 col-md-3">
+            <div class="stat-card p-4 text-center">
+              <div class="stat-icon bg-success bg-opacity-10 text-success mx-auto mb-3">
+                <i class="fas fa-arrow-down fa-lg"></i>
+              </div>
+              <h5 class="fw-bold text-success mb-1" th:text="'TZS ' + ${#numbers.formatDecimal(totalDeposits, 1, 'COMMA', 2, 'POINT')}">TZS 12.5M</h5>
+              <small class="text-muted">Jumla ya Amana</small>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="stat-card p-4 text-center">
+              <div class="stat-icon bg-danger bg-opacity-10 text-danger mx-auto mb-3">
+                <i class="fas fa-arrow-up fa-lg"></i>
+              </div>
+              <h5 class="fw-bold text-danger mb-1" th:text="'TZS ' + ${#numbers.formatDecimal(totalCharges, 1, 'COMMA', 2, 'POINT')}">TZS 4.0M</h5>
+              <small class="text-muted">Jumla ya Tozo</small>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="stat-card p-4 text-center">
+              <div class="stat-icon bg-primary bg-opacity-10 text-primary mx-auto mb-3">
+                <i class="fas fa-balance-scale fa-lg"></i>
+              </div>
+              <h5 class="fw-bold text-primary mb-1" th:text="'TZS ' + ${#numbers.formatDecimal(netBalance, 1, 'COMMA', 2, 'POINT')}">TZS 8.5M</h5>
+              <small class="text-muted">Salio Halisi</small>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="stat-card p-4 text-center">
+              <div class="stat-icon bg-info bg-opacity-10 text-info mx-auto mb-3">
+                <i class="fas fa-list fa-lg"></i>
+              </div>
+              <h5 class="fw-bold text-info mb-1" th:text="${totalTransactionsCount}">156</h5>
+              <small class="text-muted">Jumla ya Shughuli</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4">
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover mb-0">
+                <thead class="bg-light">
+                  <tr>
+                    <th>Tarehe</th>
+                    <th>Aina</th>
+                    <th>Maelezo</th>
+                    <th>Kiasi</th>
+                    <th>Salio</th>
+                    <th>Hali</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr th:each="txn : ${transactions}" th:if="${txn != null}">
+                    <td th:text="${txn.date}">27 Dec 2025</td>
+                    <td><span th:class="'badge rounded-pill px-3 py-2 ' + (${txn.type == 'AMANA'} ? 'bg-success' : 'bg-danger')" th:text="${txn.type}">AMANA</span></td>
+                    <td th:text="${txn.description}">Mchango wa mwezi</td>
+                    <td th:class="${txn.type == 'AMANA'} ? 'text-success fw-bold' : 'text-danger fw-bold'" th:text="${txn.amount}">+ TZS 500,000</td>
+                    <td th:text="${txn.balance}">TZS 8,500,000</td>
+                    <td><span class="badge bg-success rounded-pill" th:text="${txn.status}">IMEKAMILIKA</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+            <!-- STATEMENTS - Improved with Filtering & Download Simulation -->
+            <div id="statements" class="page">
+              <div class="mb-5">
+                <h2 class="fw-bold text-dark mb-2">Taarifa za Akaunti Yako</h2>
+                <p class="text-muted fs-5">Chagua kipindi unachotaka na pakua taarifa yako kwa urahisi</p>
+              </div>
+      
+              <!-- Period Selection Cards -->
+              <div class="row g-4 mb-5">
+                <div class="col-6 col-md-4 col-lg-3">
+                  <div class="stat-card p-4 text-center cursor-pointer period-card active" data-period="current-month" onclick="filterStatements('current-month')">
+                    <i class="fas fa-calendar-day fa-2x text-primary mb-3"></i>
+                    <h5 class="fw-bold mb-2">Mwezi Huu</h5>
+                    <small class="text-muted">Des 2025</small>
+                  </div>
+                </div>
+                <div class="col-6 col-md-4 col-lg-3">
+                  <div class="stat-card p-4 text-center cursor-pointer period-card" data-period="last-3-months" onclick="filterStatements('last-3-months')">
+                    <i class="fas fa-calendar-week fa-2x text-info mb-3"></i>
+                    <h5 class="fw-bold mb-2">Miezi 3 Iliyopita</h5>
+                    <small class="text-muted">Okt - Des 2025</small>
+                  </div>
+                </div>
+                <div class="col-6 col-md-4 col-lg-3">
+                  <div class="stat-card p-4 text-center cursor-pointer period-card" data-period="last-6-months" onclick="filterStatements('last-6-months')">
+                    <i class="fas fa-calendar-alt fa-2x text-success mb-3"></i>
+                    <h5 class="fw-bold mb-2">Miezi 6 Iliyopita</h5>
+                    <small class="text-muted">Jul - Des 2025</small>
+                  </div>
+                </div>
+                <div class="col-6 col-md-4 col-lg-3">
+                  <div class="stat-card p-4 text-center cursor-pointer period-card" data-period="current-year" onclick="filterStatements('current-year')">
+                    <i class="fas fa-calendar fa-2x text-warning mb-3"></i>
+                    <h5 class="fw-bold mb-2">Mwaka Huu</h5>
+                    <small class="text-muted">Jan - Des 2025</small>
+                  </div>
+                </div>
+                <div class="col-6 col-md-4 col-lg-3">
+                  <div class="stat-card p-4 text-center cursor-pointer period-card" data-period="last-year" onclick="filterStatements('last-year')">
+                    <i class="fas fa-history fa-2x text-secondary mb-3"></i>
+                    <h5 class="fw-bold mb-2">Mwaka Uliopita</h5>
+                    <small class="text-muted">Jan - Des 2024</small>
+                  </div>
+                </div>
+                <div class="col-6 col-md-4 col-lg-3">
+                  <div class="stat-card p-4 text-center cursor-pointer period-card" data-period="custom" onclick="filterStatements('custom')">
+                    <i class="fas fa-calendar-plus fa-2x text-danger mb-3"></i>
+                    <h5 class="fw-bold mb-2">Kwa Ombi</h5>
+                    <small class="text-muted">Chagua tarehe za mwanzo na mwisho</small>
+                  </div>
+                </div>
+              </div>
+      
+              <!-- Generated Statements Table -->
+              <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-transparent border-0 p-4 d-flex justify-content-between align-items-center">
+                  <h5 class="fw-bold mb-0">Taarifa Zilizotengenezwa</h5>
+                  <small class="text-muted">Bofya kitufe ili kupakua</small>
+                </div>
+                <div class="card-body p-0">
+                  <div class="table-responsive">
+                    <table class="table table-hover mb-0" id="statementsTable">
+                      <thead class="bg-light">
+                        <tr>
+                          <th>Kipindi</th>
+                          <th>Aina ya Taarifa</th>
+                          <th>Muhtasari</th>
+                          <th>Muundo</th>
+                          <th>Tarehe</th>
+                          <th>Hatua</th>
+                        </tr>
+                      </thead>
+                      <tbody id="statementsBody">
+                    <tr th:each="stmt : ${statements}">
+                      <td th:text="${stmt.period}">Period</td>
+                      <td th:text="${stmt.type}">Type</td>
+                      <td th:text="${stmt.summary}">Summary</td>
+                      <td><span class="badge bg-info px-3 py-2">PDF</span></td>
+                      <td th:text="${stmt.date}">Date</td>
+                      <td><button class="btn btn-outline-primary btn-sm">Download</button></td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(statements)}">
+                        <td colspan="6" class="text-center text-muted">Hakuna taarifa zilizotengenezwa bado.</td>
+                    </tr>
+                        <!-- Custom (will be shown when selected) -->
+                        <tr data-period="custom" style="display: none;">
+                          <td id="customPeriod">Tarehe Zilizochaguliwa</td>
+                          <td>Akaunti Zote</td>
+                          <td>Taarifa itatayarishwa baada ya uthibitisho</td>
+                          <td><span class="badge bg-secondary px-3 py-2">Inatayarishwa</span></td>
+                          <td>Sasa hivi</td>
+                          <td>
+                            <button class="btn btn-outline-secondary btn-sm" disabled>Inasubiri...</button>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                <div class="card-footer bg-light border-0 p-4 text-center">
+                  <small class="text-muted">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Taarifa zote zinatayarishwa kwa usalama na faragha yako. Unaweza kupakua mara moja au kuomba kwa tarehe maalum.
+                  </small>
+                </div>
+              </div>
+            </div>
+
+            <!-- GUARANTOR REQUESTS - Fully Functional & Professional -->
+      <div id="guarantor-requests" class="page">
+        <div class="mb-5">
+          <h2 class="fw-bold text-dark mb-2">Maombi ya Mdhamini</h2>
+          <p class="text-muted fs-5">Angalia na dhibiti ombi za wanachama wanaokuomba uwe mdhamini wao</p>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="row g-4 mb-5">
+          <div class="col-6 col-md-3">
+            <div class="stat-card p-4 text-center">
+              <div class="stat-icon bg-warning bg-opacity-10 text-warning mx-auto mb-3">
+                <i class="fas fa-clock fa-lg"></i>
+              </div>
+              <h4 class="fw-bold text-warning mb-1" th:text="${pendingGuarantorRequests}">0</h4>
+              <small class="text-muted">Inasubiri Kukaguliwa</small>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="stat-card p-4 text-center">
+              <div class="stat-icon bg-success bg-opacity-10 text-success mx-auto mb-3">
+                <i class="fas fa-check fa-lg"></i>
+              </div>
+              <h4 class="fw-bold text-success mb-1" th:text="${acceptedGuarantees}">0</h4>
+              <small class="text-muted">Zilizokubaliwa</small>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="stat-card p-4 text-center">
+              <div class="stat-icon bg-info bg-opacity-10 text-info mx-auto mb-3">
+                <i class="fas fa-money-bill-wave fa-lg"></i>
+              </div>
+              <h5 class="fw-bold text-info mb-1" th:text="'TZS ' + ${#numbers.formatDecimal(totalGuaranteedAmount, 1, 'COMMA', 2, 'POINT')}">TZS 2.5M</h5>
+              <small class="text-muted">Jumla ya Dhamana Zako</small>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="stat-card p-4 text-center">
+              <div class="stat-icon bg-success bg-opacity-10 text-success mx-auto mb-3">
+                <i class="fas fa-shield-alt fa-lg"></i>
+              </div>
+              <h5 class="fw-bold text-success mb-1">Hatari ya Chini</h5>
+              <small class="text-muted">Salio lako linawakinga vizuri</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <ul class="nav nav-tabs mb-4" id="guarantorTab" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active fw-bold" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending-guarantee" type="button">Inasubiri Kukaguliwa</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link fw-bold" id="active-tab" data-bs-toggle="tab" data-bs-target="#active-guarantee" type="button">Zilizokubaliwa</button>
+          </li>
+        </ul>
+
+        <div class="tab-content">
+          <!-- Pending Requests -->
+          <div class="tab-pane fade show active" id="pending-guarantee" th:if="${!#lists.isEmpty(guarantorRequests)}">
+            <div class="card border-0 shadow-sm rounded-4 mb-4" th:each="req : ${guarantorRequests}">
+              <div class="card-body p-4">
+                <div class="row align-items-center">
+                  <div class="col-md-8">
+                    <div class="d-flex align-items-center mb-3">
+                      <img src="https://placehold.co/60" class="rounded-circle me-3" width="60" alt="Mwombaji">
+                      <div>
+                        <h5 class="fw-bold mb-1" th:text="${req.name}">Maria Joseph</h5>
+                        <small class="text-muted" th:text="'Mwanachama No: ' + ${req.id}">Mwanachama No: AKB2023012</small>
+                      </div>
+                    </div>
+                    <div class="row g-3">
+                      <div class="col-sm-6 col-md-4">
+                        <small class="text-muted">Aina ya Mkopo</small>
+                        <p class="fw-bold text-primary" th:text="${req.type}">Mkopo wa Biashara</p>
+                      </div>
+                      <div class="col-sm-6 col-md-4">
+                        <small class="text-muted">Kiasi</small>
+                        <p class="fw-bold text-success" th:text="${req.amount}">TZS 1,000,000</p>
+                      </div>
+                      <div class="col-sm-6 col-md-4">
+                        <small class="text-muted">Muda</small>
+                        <p class="fw-bold" th:text="${req.term}">12 miezi</p>
+                      </div>
+                      <div class="col-sm-6 col-md-4">
+                        <small class="text-muted">Riba (15% p.a.)</small>
+                        <p class="fw-bold text-warning" th:text="${req.interest}">TZS 150,000</p>
+                      </div>
+                      <div class="col-sm-6 col-md-4">
+                        <small class="text-muted">Malipo ya Kila Mwezi</small>
+                        <p class="fw-bold text-danger" th:text="${req.monthly}">TZS 95,833</p>
+                      </div>
+                      <div class="col-sm-6 col-md-4">
+                        <small class="text-muted">Salio la Akiba</small>
+                        <p class="fw-bold text-info" th:text="${req.savings}">TZS 2.8M</p>
+                      </div>
+                    </div>
+                    <div class="mt-3">
+                      <small class="text-muted" th:text="'Sababu: ' + ${req.reason}">Sababu...</small>
+                    </div>
+                  </div>
+                  <div class="col-md-4 text-center">
+                    <small class="text-muted d-block mb-2" th:text="'Iliombwa: ' + ${req.date}">Iliombwa: 25 Des 2025</small>
+                    <button class="btn btn-primary w-100 mb-2 rounded-pill py-3 shadow" data-bs-toggle="modal" data-bs-target="#reviewGuarantorModal">
+                      <i class="fas fa-eye me-2"></i>Kagua Ombi
+                    </button>
+                    <small th:class="${req.risk == 'LOW'} ? 'text-success d-block' : 'text-warning d-block'">
+                        <i class="fas fa-shield-alt me-1"></i><span th:text="${req.riskText}">Hatari ya Chini</span>
+                    </small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="tab-pane fade show active" id="pending-guarantee-empty" th:if="${#lists.isEmpty(guarantorRequests)}">
+            <div class="text-center py-5">
+              <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
+              <h5 class="text-muted">Hakuna maombi ya udhamini yanayosubiri.</h5>
+            </div>
+          </div>
+
+          <!-- Active Guarantees -->
+          <div class="tab-pane fade" id="active-guarantee">
+            <div class="row g-4">
+              <div class="col-md-6 col-lg-4" th:each="guarantee : ${activeGuarantees}">
+                <div class="card border-0 shadow-sm h-100">
+                  <div class="card-body p-4 text-center">
+                    <i class="fas fa-user-check fa-3x text-success mb-3 opacity-75"></i>
+                    <h5 class="fw-bold" th:text="${guarantee.name}">Fatma Ali</h5>
+                    <p class="text-muted small" th:text="${guarantee.type} + ' • ' + ${guarantee.amount}">Mkopo wa Elimu • TZS 600K</p>
+                    <span class="badge bg-success px-3 py-2" th:text="${guarantee.status}">Inalipwa Vizuri</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="text-center mt-4">
+              <p class="fs-5 text-success"><i class="fas fa-heart me-2"></i>Asante kwa kuwa mdhamini mwaminifu!</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Review Guarantor Request Modal 1 -->
+      <div class="modal fade" id="reviewGuarantorModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+          <div class="modal-content rounded-4 border-0 shadow-lg">
+            <div class="modal-header bg-primary text-white border-0 rounded-top-4">
+              <h5 class="modal-title fw-bold"><i class="fas fa-file-search me-2"></i>Kagua Ombi la Udhamini – Maria Joseph</h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-5">
+              <div class="text-center mb-4">
+                <img src="https://placehold.co/100" class="rounded-circle shadow" width="100" alt="Maria Joseph">
+                <h4 class="fw-bold mt-3">Maria Joseph</h4>
+                <p class="text-muted">Mwanachama No: AKB2023012</p>
+              </div>
+
+              <div class="row g-4 mb-4">
+                <div class="col-md-6">
+                  <div class="p-4 bg-light rounded-4">
+                    <small class="text-muted">Aina ya Mkopo</small>
+                    <h5 class="fw-bold text-primary">Mkopo wa Biashara</h5>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="p-4 bg-light rounded-4">
+                    <small class="text-muted">Kiasi</small>
+                    <h5 class="fw-bold text-success">TZS 1,000,000</h5>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="p-4 bg-light rounded-4">
+                    <small class="text-muted">Muda</small>
+                    <h5 class="fw-bold">12 miezi</h5>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="p-4 bg-light rounded-4">
+                    <small class="text-muted">Riba</small>
+                    <h5 class="fw-bold text-warning">TZS 150,000</h5>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="p-4 bg-light rounded-4">
+                    <small class="text-muted">Malipo ya Kila Mwezi</small>
+                    <h5 class="fw-bold text-danger">TZS 95,833</h5>
+                  </div>
+                </div>
+              </div>
+
+              <div class="alert alert-info">
+                <strong>Sababu ya Mkopo:</strong><br>
+                "Nataka kupanua biashara yangu ya duka la vifaa vya ujenzi. Nina wateja wengi lakini nahitaji mtaji wa ziada kununua bidhaa zaidi."
+              </div>
+
+              <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                  <div class="p-3 bg-success bg-opacity-10 rounded-4">
+                    <small class="text-muted">Salio la Akiba</small>
+                    <h5 class="fw-bold text-success">TZS 2,800,000</h5>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="p-3 bg-info bg-opacity-10 rounded-4">
+                    <small class="text-muted">Thamani ya Hisa</small>
+                    <h5 class="fw-bold text-info">TZS 1,200,000</h5>
+                  </div>
+                </div>
+              </div>
+
+              <div class="alert alert-success">
+                <i class="fas fa-shield-alt me-2"></i>
+                <strong>Hatari ni ya Chini:</strong> Salio lake la akiba linazidi kiasi cha mkopo. Hata kama atashindwa kulipa, SACCOS italipwa kutoka akiba yake bila kukuhusu.
+              </div>
+            </div>
+            <div class="modal-footer bg-light border-0 p-4">
+              <button class="btn btn-outline-danger btn-lg rounded-pill px-5 me-3" onclick="rejectGuarantor()">
+                <i class="fas fa-times me-2"></i>Kataa
+              </button>
+              <button class="btn btn-success btn-lg rounded-pill px-5 shadow" onclick="acceptGuarantor()">
+                <i class="fas fa-check me-2"></i>Kubali Udhamini
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Review Guarantor Request Modal 2 (Example) -->
+      <div class="modal fade" id="reviewGuarantorModal2" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+          <div class="modal-content rounded-4 border-0 shadow-lg">
+            <div class="modal-header bg-primary text-white border-0 rounded-top-4">
+              <h5 class="modal-title fw-bold"><i class="fas fa-file-search me-2"></i>Kagua Ombi la Udhamini – Ahmed Hassan</h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-5">
+              <!-- Similar content as above but with different data -->
+              <div class="text-center mb-4">
+                <img src="https://placehold.co/100" class="rounded-circle shadow" width="100" alt="Ahmed Hassan">
+                <h4 class="fw-bold mt-3">Ahmed Hassan</h4>
+                <p class="text-muted">Mwanachama No: AKB2024008</p>
+              </div>
+              <div class="row g-4 mb-4">
+                <div class="col-md-6">
+                  <div class="p-4 bg-light rounded-4">
+                    <small class="text-muted">Aina ya Mkopo</small>
+                    <h5 class="fw-bold text-primary">Mkopo wa Kibinafsi</h5>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="p-4 bg-light rounded-4">
+                    <small class="text-muted">Kiasi</small>
+                    <h5 class="fw-bold text-success">TZS 800,000</h5>
+                  </div>
+                </div>
+              </div>
+              <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Hatari ya Wastani:</strong> Salio lake la akiba ni TZS 900,000 – linakaribia kiasi cha mkopo. Tafadhali kagua kwa makini.
+              </div>
+            </div>
+            <div class="modal-footer bg-light border-0 p-4">
+              <button class="btn btn-outline-danger btn-lg rounded-pill px-5 me-3" onclick="rejectGuarantor()">Kataa</button>
+              <button class="btn btn-success btn-lg rounded-pill px-5 shadow" onclick="acceptGuarantor()">Kubali</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+            <!-- MEETINGS - Professional with Location-Based Attendance -->
+      <div id="meetings" class="page">
+        <div class="mb-5">
+          <h2 class="fw-bold text-dark mb-2">Mikutano na Matukio</h2>
+          <p class="text-muted fs-5">Angalia ratiba ya mikutano, soma agenda na saini mahudhurio kwa kutumia eneo lako</p>
+        </div>
+
+        <ul class="nav nav-tabs mb-4" id="meetingsTab" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active fw-bold fs-5" id="upcoming-tab" data-bs-toggle="tab" data-bs-target="#upcoming-meetings" type="button">
+              <i class="fas fa-calendar-alt me-2"></i>Ijayo
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link fw-bold fs-5" id="past-tab" data-bs-toggle="tab" data-bs-target="#past-meetings" type="button">
+              <i class="fas fa-history me-2"></i>Iliyopita
+            </button>
+          </li>
+        </ul>
+
+        <div class="tab-content">
+          <!-- UPCOMING MEETINGS -->
+          <div class="tab-pane fade show active" id="upcoming-meetings">
+            <!-- Annual General Meeting -->
+            <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden" th:each="meeting : ${upcomingMeetings}">
+              <div class="row g-0">
+                <!-- <div class="col-md-4">
+                  <img src="https://via.placeholder.com/400x300/2563eb/ffffff?text=Mkutano+Mkuu" class="img-fluid rounded-start h-100 object-fit-cover" alt="Mkutano Mkuu">
+                </div> -->
+                <div class="col-md-8">
+                  <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                      <div>
+                        <h4 class="fw-bold text-primary" th:text="${meeting.name}">Mkutano Mkuu wa Mwaka 2025</h4>
+                        <p class="text-muted mb-2">
+                          <i class="fas fa-calendar me-2"></i><strong th:text="${meeting.date} + ' • ' + ${meeting.time}">15 Januari 2026 • 09:00 - 12:00</strong>
+                        </p>
+                        <p class="mb-2">
+                          <i class="fas fa-map-marker-alt me-2 text-success"></i><strong th:text="${meeting.location}">Ukumbi Mkuu wa AkibaPlus, Dar es Salaam</strong>
+                        </p>
+                      </div>
+                      <span class="badge bg-primary fs-5 px-4 py-2">MUHIMU SANA</span>
+                    </div>
+                    <p class="text-muted mb-4" th:text="${meeting.desc}">
+                      Majadiliano ya ripoti ya mwaka, uchaguzi wa bodi mpya, na mgao wa gawio la 2025.
+                    </p>
+                    <div class="d-flex gap-3">
+                      <button class="btn btn-outline-primary rounded-pill px-4 py-3" data-bs-toggle="modal" th:data-bs-target="'#meetingDetailsModal' + ${meeting.id}">
+                        <i class="fas fa-info-circle me-2"></i>Maelezo Zaidi
+                      </button>
+                      <button class="btn btn-success rounded-pill px-4 py-3 shadow" 
+                              th:onclick="'signAttendance(' + ${meeting.id} + ', \'' + ${#strings.escapeJavaScript(meeting.name)} + '\', ' + ${meeting.latitude} + ', ' + ${meeting.longitude} + ')'">
+                        <i class="fas fa-signature me-2"></i>Saini Mahudhurio
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div> 
+          </div> 
+
+          <!-- PAST MEETINGS -->
+          <div class="tab-pane fade" id="past-meetings">
+            <div class="row g-4">
+              <div class="col-md-6 col-lg-4" th:each="meeting : ${pastMeetings}">
+                <div class="card border-0 shadow-sm">
+                  <div class="card-body p-4 text-center">
+                    <i class="fas fa-history fa-3x text-secondary mb-3 opacity-75"></i>
+                    <h5 class="fw-bold" th:text="${meeting.name}">Mkutano</h5>
+                    <p class="text-muted small" th:text="${meeting.date}">Date</p>
+                    <span class="badge bg-secondary px-4 py-2" th:text="${meeting.status}">Imepita</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="text-center mt-5">
+              <p class="fs-4 text-muted">
+                <i class="fas fa-trophy me-2 text-warning"></i>
+                Asante kwa kuhudhuria mara kwa mara – unastahili gawio la ziada!
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Meeting Details Modals -->
+      <!-- Modal 1: AGM -->
+      <div class="modal fade" th:each="meeting : ${upcomingMeetings}" th:id="'meetingDetailsModal' + ${meeting.id}" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+          <div class="modal-content rounded-4 border-0 shadow-lg">
+            <div class="modal-header bg-primary text-white border-0 rounded-top-4">
+              <h5 class="modal-title fw-bold"><i class="fas fa-gavel me-2"></i><span th:text="${meeting.name}">Meeting</span></h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-5">
+              <div class="text-center mb-4">
+                <i class="fas fa-calendar-check fa-3x text-primary opacity-25"></i>
+                <h4 class="fw-bold mt-3" th:text="${meeting.date} + ' • ' + ${meeting.time}">Date Time</h4>
+                <p class="text-muted" th:text="${meeting.location}">Location</p>
+              </div>
+              <h6 class="fw-bold text-primary mb-3">Agenda ya Mkutano</h6>
+              <ol class="list-group list-group-numbered">
+                <li class="list-group-item py-3" th:text="${meeting.desc}">Agenda Item</li>
+                <li class="list-group-item py-3">Kusoma na kupitisha dakika za mkutano uliopita</li>
+                <li class="list-group-item py-3">Ripoti ya Bodi ya Wakurugenzi</li>
+                <li class="list-group-item py-3">Ripoti ya Mdhibiti Hesabu</li>
+                <li class="list-group-item py-3">Mjadala wa taarifa za kifedha 2025</li>
+                <li class="list-group-item py-3">Mgao wa gawio la 2025</li>
+                <li class="list-group-item py-3">Uchaguzi wa bodi mpya</li>
+                <li class="list-group-item py-3">Masuala ya wanachama</li>
+                <li class="list-group-item py-3">Kufunga mkutano</li>
+              </ol>
+              <div class="alert alert-success mt-4">
+                <i class="fas fa-star me-2"></i>
+                Wanachama wote wanahimizwa kuhudhuria – sauti yako ni muhimu!
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    
+
+      <!-- PENALTIES -->
+             <!-- PENALTIES - Fully Functional with Meeting Fines & Payment -->
+      <div id="penalties" class="page">
+        <div class="mb-5">
+          <h2 class="fw-bold text-dark mb-2">Faini na Adhabu Zangu</h2>
+          <p class="text-muted fs-5">Angalia, lipa au omba rufaa kwa faini zako – tunataka uwe na hali nzuri</p>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="row g-4 mb-5">
+          <div class="col-6 col-md-3">
+            <div class="stat-card p-4 text-center">
+              <div class="stat-icon bg-danger bg-opacity-10 text-danger mx-auto mb-3">
+                <i class="fas fa-exclamation-triangle fa-lg"></i>
+              </div>
+              <h4 class="fw-bold text-danger mb-1" th:text="'TZS ' + ${#numbers.formatDecimal(unpaidPenaltiesTotal, 1, 'COMMA', 0, 'POINT')}">TZS 0</h4>
+              <small class="text-muted">Zisizolipwa</small>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="stat-card p-4 text-center">
+              <div class="stat-icon bg-success bg-opacity-10 text-success mx-auto mb-3">
+                <i class="fas fa-check-circle fa-lg"></i>
+              </div>
+              <h5 class="fw-bold text-success mb-1" th:text="'TZS ' + ${#numbers.formatDecimal(paidPenaltiesTotal, 1, 'COMMA', 0, 'POINT')}">TZS 0</h5>
+              <small class="text-muted">Zilizolipwa</small>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="stat-card p-4 text-center">
+              <div class="stat-icon bg-warning bg-opacity-10 text-warning mx-auto mb-3">
+                <i class="fas fa-gavel fa-lg"></i>
+              </div>
+              <h5 class="fw-bold text-warning mb-1" th:text="${actionablePenalties} + ' Faini'">0 Faini</h5>
+              <small class="text-muted">Zinahitaji Hatua</small>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="stat-card p-4 text-center">
+              <div class="stat-icon bg-info bg-opacity-10 text-info mx-auto mb-3">
+                <i class="fas fa-history fa-lg"></i>
+              </div>
+              <h5 class="fw-bold text-info mb-1" th:text="'TZS ' + ${#numbers.formatDecimal(totalPenalties, 1, 'COMMA', 0, 'POINT')}">TZS 0</h5>
+              <small class="text-muted">Jumla ya Faini</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <ul class="nav nav-tabs mb-4" id="penaltiesTab">
+          <li class="nav-item">
+            <button class="nav-link active fw-bold" data-bs-toggle="tab" data-bs-target="#unpaid-penalties">Zisizolipwa</button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link fw-bold" data-bs-toggle="tab" data-bs-target="#paid-penalties">Zilizolipwa</button>
+          </li>
+        </ul>
+
+        <div class="tab-content">
+          <!-- Unpaid Penalties -->
+          <div class="tab-pane fade show active" id="unpaid-penalties" th:if="${!#lists.isEmpty(penalties)}">
+            <div class="card border-0 shadow-sm rounded-4 mb-4" th:each="penalty : ${penalties}">
+              <div class="card-body p-4">
+                <div class="row align-items-center">
+                  <div class="col-md-8">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                      <div>
+                        <h5 class="fw-bold mb-1" th:text="${penalty.title}">Kuchelewa</h5>
+                        <small class="text-muted" th:text="'Ilirekodiwa: ' + ${penalty.date}">30 Nov 2025</small>
+                      </div>
+                      <span class="badge bg-warning fs-6 px-4 py-2">IMECHELEWA (12 dakika)</span>
+                    </div>
+                    <p class="text-muted mb-3" th:text="${penalty.desc}">
+                      Maelezo ya faini.
+                    </p>
+                    <p class="fw-bold text-danger" th:text="'Kiasi: TZS ' + ${#numbers.formatDecimal(penalty.amount, 1, 'COMMA', 0, 'POINT')}">Kiasi: TZS 2,000</p>
+                  </div>
+                  <div class="col-md-4 text-end">
+                    <button class="btn btn-danger w-100 mb-3 rounded-pill py-3 shadow" data-bs-toggle="modal" data-bs-target="#payPenaltyModal" th:onclick="'preparePayment(\'' + ${penalty.amount} + '\', \'' + ${penalty.title} + '\')'">
+                      <i class="fas fa-money-bill me-2"></i>Lipa Sasa
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="tab-pane fade show active" id="unpaid-penalties-empty" th:if="${#lists.isEmpty(penalties)}">
+            <div class="text-center py-5"><i class="fas fa-check-circle fa-3x text-success mb-3"></i><h5 class="text-muted">Huna faini zozote zinazosubiri malipo.</h5></div>
+          </div>
+
+          <!-- Paid Penalties -->
+          <div class="tab-pane fade" id="paid-penalties">
+            <div class="text-center py-5">
+              <i class="fas fa-check-circle fa-3x text-success mb-4 opacity-75"></i>
+              <h4 class="fw-bold text-success">Hongera! Umelipa faini zako zote kwa wakati</h4>
+              <p class="text-muted fs-4">Hali yako ya uanachama ni bora – utapata gawio la ziada mwishoni mwa mwaka!</p>
+            </div>
+            <div th:if="${!#lists.isEmpty(paidPenalties)}">
+              <div class="card border-0 shadow-sm rounded-4 mb-4 border-start border-4 border-success" th:each="penalty : ${paidPenalties}">
+                <div class="card-body p-4">
+                  <div class="row align-items-center">
+                    <div class="col-md-8">
+                      <h5 class="fw-bold mb-1 text-success" th:text="${penalty.title}">Kukosa Kuhudhuria Mkutano</h5>
+                      <small class="text-muted" th:text="'Ililipwa: ' + ${penalty.date}">30 Okt 2025</small>
+                      <p class="text-muted mb-0 mt-2" th:text="${penalty.desc}">Maelezo ya faini iliyolipwa.</p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                      <p class="fw-bold text-success mb-0" th:text="'TZS ' + ${#numbers.formatDecimal(penalty.amount, 1, 'COMMA', 0, 'POINT')}">TZS 5,000</p>
+                      <span class="badge bg-success">IMELIPWA</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pay Penalty Modal -->
+      <div class="modal fade" id="payPenaltyModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content rounded-4 border-0 shadow-lg">
+            <div class="modal-header bg-danger text-white border-0 rounded-top-4">
+              <h5 class="modal-title fw-bold"><i class="fas fa-credit-card me-2"></i>Lipa Faini</h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-5 text-center">
+              <i class="fas fa-exclamation-triangle fa-3x text-danger mb-4 opacity-50"></i>
+              <h4 class="fw-bold" id="penaltyDescription">Kuchelewa Mkutano</h4>
+              <h3 class="fw-bold text-danger mt-3" id="penaltyAmount">TZS 2,000</h3>
+              <p class="text-muted mt-4">Malipo yatafanyika kutoka salio lako la akiba au pochi ya simu</p>
+            </div>
+            <div class="modal-footer bg-light border-0 p-4 justify-content-center">
+              <button class="btn btn-outline-secondary rounded-pill px-5 me-3" data-bs-dismiss="modal">Ghairi</button>
+              <button class="btn btn-danger btn-lg rounded-pill px-5 shadow" onclick="confirmPenaltyPayment()">
+                <i class="fas fa-check me-2"></i>Thibitisha Malipo
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Penalty Details Modal 1 -->
+      <div class="modal fade" th:each="penalty, iter : ${penalties}" th:id="'penaltyDetailsModal' + ${iter.index}" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content rounded-4 border-0 shadow-lg">
+            <div class="modal-header bg-warning text-white border-0 rounded-top-4">
+              <h5 class="modal-title fw-bold" th:text="'Maelezo ya Faini – ' + ${penalty.title}">Maelezo</h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+              <p><strong>Tarehe ya Tukio:</strong> <span th:text="${penalty.date}">Date</span></p>
+              <p><strong>Sababu ya Faini:</strong> <span th:text="${penalty.desc}">Desc</span></p>
+              <p><strong>Hali:</strong> <span th:text="${penalty.status}">Status</span></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Penalty Details Modal 2 -->
+      <!-- Removed hardcoded modal 2 -->
+
+            <!-- ANALYTICS PAGE - Professional SACCOS Member Dashboard -->
+            <div id="analytics" class="page">
+              <div class="mb-5">
+                <h2 class="fw-bold text-dark mb-2">Takwimu na Uchambuzi wa Akaunti Yako</h2>
+                <p class="text-muted fs-5">Muhtasari wa kina wa maendeleo yako ya kifedha ndani ya AkibaPlus SACCOS</p>
+              </div>
+      
+              <!-- Key Metrics Cards -->
+              <div class="row g-4 mb-5">
+                <div class="col-md-6 col-lg-3">
+                  <div class="stat-card p-4 text-center">
+                    <div class="stat-icon bg-primary bg-opacity-10 text-primary mx-auto mb-3">
+                      <i class="fas fa-chart-line fa-lg"></i>
+                    </div>
+                  <h5 class="fw-bold text-primary mb-1" th:text="${savingsGrowth}">+0.0%</h5>
+                    <small class="text-muted">Ukuaji wa Akiba (2025 vs 2024)</small>
+                  </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                  <div class="stat-card p-4 text-center">
+                    <div class="stat-icon bg-success bg-opacity-10 text-success mx-auto mb-3">
+                      <i class="fas fa-piggy-bank fa-lg"></i>
+                    </div>
+                  <h5 class="fw-bold text-success mb-1" th:text="'TZS ' + ${#numbers.formatDecimal(interestReceived, 1, 'COMMA', 0, 'POINT')}">TZS 0</h5>
+                    <small class="text-muted">Riba Iliyopokelewa 2025</small>
+                  </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                  <div class="stat-card p-4 text-center">
+                    <div class="stat-icon bg-warning bg-opacity-10 text-warning mx-auto mb-3">
+                      <i class="fas fa-gift fa-lg"></i>
+                    </div>
+                  <h5 class="fw-bold text-warning mb-1" th:text="'TZS ' + ${#numbers.formatDecimal(expectedDividend, 1, 'COMMA', 0, 'POINT')}">TZS 0</h5>
+                    <small class="text-muted">Gawio Lililotarajiwa 2025</small>
+                  </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                  <div class="stat-card p-4 text-center">
+                    <div class="stat-icon bg-info bg-opacity-10 text-info mx-auto mb-3">
+                      <i class="fas fa-trophy fa-lg"></i>
+                    </div>
+                  <h5 class="fw-bold text-info mb-1" th:text="${memberScore}">0%</h5>
+                    <small class="text-muted">Alama ya Malipo na Uanachama</small>
+                  </div>
+                </div>
+              </div>
+      
+              <!-- Charts Grid -->
+              <div class="row g-4">
+                <!-- 1. Savings & Shares Growth -->
+                <div class="col-lg-6">
+                  <div class="card border-0 shadow-sm rounded-4 h-100">
+                    <div class="card-header bg-transparent border-0 p-4">
+                      <h5 class="fw-bold mb-0">Ukuaji wa Akiba na Hisa (2019 - 2025)</h5>
+                      <small class="text-muted">Bofya na buruta ili uone maelezo zaidi</small>
+                    </div>
+                    <div class="card-body p-4">
+                      <canvas id="savingsSharesGrowthChart" height="320"></canvas>
+                    </div>
+                  </div>
+                </div>
+      
+                <!-- 2. Income vs Expenses -->
+                <div class="col-lg-6">
+                  <div class="card border-0 shadow-sm rounded-4 h-100">
+                    <div class="card-header bg-transparent border-0 p-4">
+                      <h5 class="fw-bold mb-0">Mapato vs Matumizi Yako (2025)</h5>
+                    </div>
+                    <div class="card-body p-4">
+                      <canvas id="incomeExpenseChart" height="320"></canvas>
+                    </div>
+                  </div>
+                </div>
+      
+                <!-- 3. Loan Repayment Progress -->
+                <div class="col-lg-6">
+                  <div class="card border-0 shadow-sm rounded-4 h-100">
+                    <div class="card-header bg-transparent border-0 p-4">
+                      <h5 class="fw-bold mb-0">Maendeleo ya Malipo ya Mikopo Yako</h5>
+                    </div>
+                    <div class="card-body p-4">
+                      <canvas id="loanRepaymentChart" height="320"></canvas>
+                    </div>
+                  </div>
+                </div>
+      
+                <!-- 4. Monthly Contributions -->
+                <div class="col-lg-6">
+                  <div class="card border-0 shadow-sm rounded-4 h-100">
+                    <div class="card-header bg-transparent border-0 p-4">
+                      <h5 class="fw-bold mb-0">Michango Yako ya Kila Mwezi (2025)</h5>
+                    </div>
+                    <div class="card-body p-4">
+                      <canvas id="monthlyContributionsChart" height="320"></canvas>
+                    </div>
+                  </div>
+                </div>
+      
+                <!-- 5. Interest & Dividends Earned -->
+                <div class="col-lg-6">
+                  <div class="card border-0 shadow-sm rounded-4 h-100">
+                    <div class="card-header bg-transparent border-0 p-4">
+                      <h5 class="fw-bold mb-0">Riba na Gawio Lililopokelewa (Miaka 5)</h5>
+                    </div>
+                    <div class="card-body p-4">
+                      <canvas id="interestDividendsChart" height="320"></canvas>
+                    </div>
+                  </div>
+                </div>
+      
+                <!-- 6. Loans Paid vs Outstanding -->
+                <div class="col-lg-6">
+                  <div class="card border-0 shadow-sm rounded-4 h-100">
+                    <div class="card-header bg-transparent border-0 p-4">
+                      <h5 class="fw-bold mb-0">Mikopo Iliyolipwa vs Salio Lililobaki</h5>
+                    </div>
+                    <div class="card-body p-4">
+                      <canvas id="loansPaidChart" height="320"></canvas>
+                    </div>
+                  </div>
+                </div>
+      
+                <!-- 7. Asset Allocation -->
+                <div class="col-12">
+                  <div class="card border-0 shadow-sm rounded-4">
+                    <div class="card-header bg-transparent border-0 p-4 text-center">
+                      <h5 class="fw-bold mb-0">Mgao wa Mali Yako katika AkibaPlus</h5>
+                      <small class="text-muted">Hadi Desemba 2025</small>
+                    </div>
+                    <div class="card-body p-4 text-center">
+                      <canvas id="assetAllocationChart" height="400" style="max-height: 400px;"></canvas>
+                    </div>
+                  </div>
+                </div>
+              </div>
+      
+              <div class="text-center mt-5">
+                <p class="fs-5 text-muted">
+                  <i class="fas fa-heart me-2 text-danger"></i>
+                  Asante kwa kuwa mwanachama mwaminifu wa AkibaPlus – maendeleo yako ni mafanikio yetu!
+                </p>
+              </div>
+            </div>
+            </div>
+
+      <!-- PROFILE -->
+            <!-- PROFILE - Professional SACCOS Member Profile -->
+            <div id="profile" class="page">
+              <div class="mb-5">
+                <h2 class="fw-bold text-dark mb-2">Profile Yangu</h2>
+                <p class="text-muted fs-5">Dhibiti maelezo yako ya kibinafsi na ya uanachama wako</p>
+              </div>
+      
+              <div class="row g-4">
+                <!-- Profile Picture & Membership Card -->
+                <div class="col-lg-4">
+                  <div class="card border-0 shadow-sm rounded-4 text-center p-5 mb-4">
+                    <img th:src="${profile.profileImageUrl != null ? profile.profileImageUrl : 'https://placehold.co/200/2563eb/ffffff?text=' + #strings.substring(profile.firstName,0,1) + #strings.substring(profile.lastName,0,1)}" id="profileImage" class="rounded-circle mb-4 shadow-lg" width="100" height="100" alt="Profile Picture" style="object-fit: cover;">
+                    <h3 class="fw-bold mb-2" id="profileName" th:text="${profile.firstName + ' ' + profile.lastName}">John Doe</h3>
+                    <p class="text-primary fs-4 fw-bold mb-4" id="memberNumber" th:text="${profile.membershipNumber}">AKB2025001</p>
+                    <input type="file" id="profilePicInput" accept="image/*" style="display: none;" onchange="previewProfilePic(event)">
+                    <button class="btn btn-primary btn-lg rounded-pill px-5 shadow mb-3" onclick="document.getElementById('profilePicInput').click()">
+                      <i class="fas fa-camera me-2"></i>Badilisha Picha
+                    </button>
+                    <button class="btn btn-success btn-lg rounded-pill px-5 shadow" onclick="downloadMembershipCard()">
+                      <i class="fas fa-id-card me-2"></i>Pakua Kadi ya Uanachama
+                    </button>
+                  </div>
+      
+                  <!-- Membership Summary -->
+                  <div class="card border-0 shadow-sm rounded-4">
+                    <div class="card-header bg-primary text-white rounded-top-4">
+                      <h6 class="fw-bold mb-0 py-3">Muhtasari wa Uanachama</h6>
+                    </div>
+                    <div class="card-body p-4">
+                      <p><strong>Akaunti Imeanza:</strong> <span th:text="${#temporals.format(profile.joinedOn, 'MMMM yyyy')}">Januari 2023</span></p>
+                      <p><strong>Muda wa Uanachama:</strong> <span th:text="${membershipDuration}">3 miaka</span></p>
+                      <p><strong>Hali:</strong> <span class="badge bg-success px-3 py-2" th:text="${profile.status}">Active</span></p>
+                      <p><strong>Alama ya Malipo:</strong> <span class="text-success fw-bold" th:text="${creditScore}">95%</span></p>
+                      <p><strong>Salio la Akiba:</strong> <strong class="text-primary" th:text="'TZS ' + ${#numbers.formatDecimal(savingsBalance, 1, 'COMMA', 0, 'POINT')}">TZS 8,500,000</strong></p>
+                      <p><strong>Thamani ya Hisa:</strong> <strong class="text-success" th:text="'TZS ' + ${#numbers.formatDecimal(shareValue, 1, 'COMMA', 0, 'POINT')}">TZS 4,200,000</strong></p>
+                    </div>
+                  </div>
+                </div>
+      
+                <!-- Profile Details Tabs -->
+                <div class="col-lg-8">
+                  <ul class="nav nav-tabs mb-4" id="profileTabs">
+                    <li class="nav-item">
+                      <button class="nav-link active fw-bold" data-bs-toggle="tab" data-bs-target="#personal-info">Maelezo ya Kibinafsi</button>
+                    </li>
+                    <li class="nav-item">
+                      <button class="nav-link fw-bold" data-bs-toggle="tab" data-bs-target="#address-info">Anwani</button>
+                    </li>
+                    <li class="nav-item">
+                      <button class="nav-link fw-bold" data-bs-toggle="tab" data-bs-target="#next-of-kin">Mrithi (Next of Kin)</button>
+                    </li>
+                    <li class="nav-item">
+                      <button class="nav-link fw-bold" data-bs-toggle="tab" data-bs-target="#security">Usalama</button>
+                    </li>
+                  </ul>
+      
+                  <div class="tab-content">
+                    <!-- Personal Information -->
+                    <div class="tab-pane fade show active" id="personal-info">
+                      <div class="card border-0 shadow-sm rounded-4">
+                        <div class="card-header bg-transparent border-0 p-4">
+                          <h5 class="fw-bold mb-0">Maelezo ya Kibinafsi</h5>
+                        </div>
+                        <div class="card-body p-4">
+                          <form id="personalInfoForm">
+                            <div class="row g-4">
+                              <div class="col-md-6">
+                                <label class="form-label fw-bold">Jina la Kwanza</label> 
+                                <input type="text" id="profileFirstName" class="form-control form-control-lg" th:value="${profile.firstName}" required>
+                              </div>
+                              <div class="col-md-6">
+                                <label class="form-label fw-bold">Jina la Kati (Hiari)</label> 
+                                <input type="text" id="profileMiddleName" class="form-control form-control-lg" th:value="${profile.middleName}">
+                              </div>
+                              <div class="col-md-6">
+                                <label class="form-label fw-bold">Jina la Mwisho</label>
+                                <input type="text" id="profileLastName" class="form-control form-control-lg" th:value="${profile?.lastName}" required>
+                              </div>
+                              <div class="col-md-6">
+                                <label class="form-label fw-bold">Tarehe ya Kuzaliwa</label>
+                                <input type="date" id="profileDob" class="form-control form-control-lg" th:value="${profile.dob}">
+                              </div>
+                              <div class="col-md-6">
+                                <label class="form-label fw-bold">Jinsia</label>
+                                <select class="form-select form-select-lg" id="profileGender">
+                                  <option th:selected="${profile.gender == 'Mwanaume'}">Mwanaume</option>
+                                  <option th:selected="${profile.gender == 'Mwanamke'}">Mwanamke</option>
+                                </select>
+                              </div>
+                              <div class="col-md-6">
+                                <label class="form-label fw-bold">Hali ya Ndowa</label>
+                                <select class="form-select form-select-lg" id="profileMarital">
+                                  <option th:selected="${profile.maritalStatus == 'Hajaolewa'}">Hajaolewa</option>
+                                  <option th:selected="${profile.maritalStatus == 'Ameolewa'}">Ameolewa</option>
+                                  <option th:selected="${profile.maritalStatus == 'Mtalaka'}">Mtalaka</option>
+                                  <option th:selected="${profile.maritalStatus == 'Mjane'}">Mjane</option>
+                                </select>
+                              </div>
+                              <div class="col-md-6">
+                                <label class="form-label fw-bold">Barua Pepe</label>
+                                <input type="email" id="profileEmail" class="form-control form-control-lg" th:value="${profile.user.email}" required readonly>
+                              </div>
+                              <div class="col-md-6">
+                                <label class="form-label fw-bold">Namba ya Simu</label>
+                                <input type="tel" id="profilePhone" class="form-control form-control-lg" th:value="${profile.phone}" required>
+                              </div>
+                            </div>
+                            <div class="mt-5 text-end">
+                              <button type="button" class="btn btn-primary btn-lg rounded-pill px-5 shadow" onclick="saveProfileChanges('personal')">
+                                <i class="fas fa-save me-2"></i>Hifadhi Mabadiliko
+                              </button>
+                            </div>
+                          </form>
+                        </div>
+                      </div>
+                    </div>
+      
+                    <!-- Address Information -->
+                    <div class="tab-pane fade" id="address-info">
+                      <div class="card border-0 shadow-sm rounded-4">
+                        <div class="card-header bg-transparent border-0 p-4">
+                          <h5 class="fw-bold mb-0">Anwani ya Makazi</h5>
+                        </div>
+                        <div class="card-body p-4">
+                          <form id="addressForm">
+                            <div class="row g-4">
+                              <div class="col-12">
+                                <label class="form-label fw-bold">Mtaa / Kijiji</label>
+                                <input type="text" id="profileStreet" class="form-control form-control-lg" th:value="${profile.street}" required>
+                              </div>
+                              <div class="col-md-6">
+                                <label class="form-label fw-bold">Wilaya</label>
+                                <input type="text" id="profileDistrict" class="form-control form-control-lg" th:value="${profile.district}" required>
+                              </div>
+                              <div class="col-md-6">
+                                <label class="form-label fw-bold">Mkoa</label>
+                                <select class="form-select form-select-lg" id="profileRegion">
+                                  <option th:selected="${profile.region == 'Dar es Salaam'}">Dar es Salaam</option>
+                                  <option th:selected="${profile.region == 'Arusha'}">Arusha</option>
+                                  <option th:selected="${profile.region == 'Dodoma'}">Dodoma</option>
+                                  <option th:selected="${profile.region == 'Mwanza'}">Mwanza</option>
+                                  <!-- Add more regions as needed -->
+                                </select>
+                              </div>
+                              <div class="col-12">
+                                <label class="form-label fw-bold">Maelezo ya Ziada (Hiari)</label>
+                                <textarea class="form-control" id="profileAddressDesc" rows="3" placeholder="Nyumba No. 45, Karibu na Soko la Kariakoo" th:text="${profile.addressDescription}"></textarea>
+                              </div>
+                            </div>
+                            <div class="mt-5 text-end">
+                              <button type="button" class="btn btn-primary btn-lg rounded-pill px-5 shadow" onclick="saveProfileChanges('address')">
+                                <i class="fas fa-save me-2"></i>Hifadhi Anwani
+                              </button>
+                            </div>
+                          </form>
+                        </div>
+                      </div>
+                    </div>
+      
+                    <!-- Next of Kin -->
+                    <div class="tab-pane fade" id="next-of-kin">
+                      <div class="card border-0 shadow-sm rounded-4">
+                        <div class="card-header bg-transparent border-0 p-4">
+                          <h5 class="fw-bold mb-0">Mrithi (Next of Kin)</h5>
+                          <p class="text-muted small">Mtu atakayepokea faida zako endapo utafariki</p>
+                        </div>
+                        <div class="card-body p-4">
+                          <form id="nextOfKinForm">
+                            <div class="row g-4">
+                              <div class="col-md-6">
+                                <label class="form-label fw-bold">Jina Kamili la Mrithi</label>
+                                <input type="text" id="nokName" class="form-control form-control-lg" th:value="${profile.nextOfKinName}">
+                              </div>
+                              <div class="col-md-6">
+                                <label class="form-label fw-bold">Namba ya Simu</label>
+                                <input type="tel" id="nokPhone" class="form-control form-control-lg" th:value="${profile.nextOfKinPhone}">
+                              </div>
+                              <div class="col-md-6">
+                                <label class="form-label fw-bold">Uhusiano</label>
+                                <select class="form-select form-select-lg" id="nokRelation">
+                                  <option th:selected="${profile.nextOfKinRelation == 'Mke'}">Mke</option>
+                                  <option th:selected="${profile.nextOfKinRelation == 'Mume'}">Mume</option>
+                                  <option th:selected="${profile.nextOfKinRelation == 'Mtoto'}">Mtoto</option>
+                                  <option th:selected="${profile.nextOfKinRelation == 'Mzazi'}">Mzazi</option>
+                                  <option th:selected="${profile.nextOfKinRelation == 'Ndugu/Dada'}">Ndugu/Dada</option>
+                                  <option th:selected="${profile.nextOfKinRelation == 'Mwingine'}">Mwingine</option>
+                                </select>
+                              </div>
+                              <div class="col-md-6">
+                                <label class="form-label fw-bold">Asilimia ya Urithi (%)</label>
+                                <input type="number" id="nokPercent" class="form-control form-control-lg" th:value="${profile.nextOfKinPercent}" min="1" max="100">
+                              </div>
+                            </div>
+                            <div class="mt-5 text-end">
+                              <button type="button" class="btn btn-primary btn-lg rounded-pill px-5 shadow" onclick="saveProfileChanges('nextOfKin')">
+                                <i class="fas fa-save me-2"></i>Hifadhi Mrithi
+                              </button>
+                            </div>
+                          </form>
+                        </div>
+                      </div>
+                    </div>
+      
+                    <!-- Security -->
+                    <div class="tab-pane fade" id="security">
+                      <div class="card border-0 shadow-sm rounded-4">
+                        <div class="card-header bg-transparent border-0 p-4">
+                          <h5 class="fw-bold mb-0">Usalama wa Akaunti</h5>
+                        </div>
+                        <div class="card-body p-4">
+                          <form id="passwordForm">
+                            <div class="row g-4">
+                              <div class="col-12">
+                                <label class="form-label fw-bold">Nenosiri la Sasa</label>
+                                <input type="password" id="currentPassword" class="form-control form-control-lg" placeholder="Ingiza nenosiri lako la sasa" required>
+                              </div>
+                              <div class="col-md-6">
+                                <label class="form-label fw-bold">Nenosiri Jipya</label>
+                                <input type="password" id="newPassword" class="form-control form-control-lg" placeholder="Nenosiri lenye angalau herufi 8" required>
+                              </div>
+                              <div class="col-md-6">
+                                <label class="form-label fw-bold">Thibitisha Nenosiri Jipya</label>
+                                <input type="password" id="confirmPassword" class="form-control form-control-lg" placeholder="Rudia nenosiri jipya" required>
+                              </div>
+                            </div>
+                            <div class="mt-5 text-end">
+                              <button type="button" class="btn btn-danger btn-lg rounded-pill px-5 shadow" onclick="changePassword()">
+                                <i class="fas fa-lock me-2"></i>Badilisha Nenosiri
+                              </button>
+                            </div>
+                          </form>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+    </div>
+  </main>
+
+  <!-- Mobile Bottom Navigation -->
+  <nav class="mobile-nav d-lg-none">
+    <div class="container">
+      <div class="row text-center g-0">
+        <div class="col">
+          <a href="#" class="nav-link active d-flex flex-column align-items-center py-2" onclick="loadPage('dashboard')">
+            <i class="fas fa-home"></i>
+            <span>Nyumbani</span>
+          </a>
+        </div>
+        <div class="col">
+          <a href="#" class="nav-link d-flex flex-column align-items-center py-2" onclick="loadPage('savings')">
+            <i class="fas fa-piggy-bank"></i>
+            <span>Akiba</span>
+          </a>
+        </div>
+        <div class="col">
+          <a href="#" class="nav-link d-flex flex-column align-items-center py-2" onclick="loadPage('loans')">
+            <i class="fas fa-money-bill-wave"></i>
+            <span>Mikopo</span>
+          </a>
+        </div>
+        <div class="col">
+          <a href="#" class="nav-link d-flex flex-column align-items-center py-2" onclick="loadPage('transactions')">
+            <i class="fas fa-exchange-alt"></i>
+            <span>Shughuli</span>
+          </a>
+        </div>
+
+        <div class="col">
+          <a href="#" class="nav-link d-flex flex-column align-items-center py-2" onclick="loadPage('analytics')">
+            <i class="fas fa-chart-line"></i>
+            <span>Takwimu</span>
+          </a>
+        </div>
+
+        <div class="col">
+          <a href="#" class="nav-link d-flex flex-column align-items-center py-2" onclick="loadPage('profile')">
+            <i class="fas fa-user"></i>
+            <span>Profile</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Deposit Modal -->
+  <div class="modal fade" id="depositModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content rounded-4 border-0 shadow-lg">
+        <div class="modal-header bg-success text-white border-0 rounded-top-4">
+          <h5 class="modal-title fw-bold fs-4"><i class="fas fa-plus-circle me-3"></i>Weka Akiba</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-5">
+          <div class="text-center mb-4">
+            <i class="fas fa-piggy-bank fa-3x text-success opacity-25"></i>
+          </div>
+          <div class="mb-4">
+            <label class="form-label fw-bold fs-5">Kiasi (TZS)</label>
+            <input type="number" id="depositAmount" class="form-control form-control-lg text-center fs-3" placeholder="0" min="1000">
+          </div>
+          <div class="mb-4">
+            <label class="form-label fw-bold fs-5">Namba ya Simu (kwa malipo)</label>
+            <input type="tel" id="depositPhone" class="form-control form-control-lg text-center fs-5" placeholder="+255 7xx xxx xxx">
+          </div>
+          <button class="btn btn-success btn-lg w-100 rounded-pill py-4 shadow" onclick="submitDeposit()">
+            <i class="fas fa-paper-plane me-3"></i>Weka Pesa
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Withdraw Modal -->
+  <div class="modal fade" id="withdrawModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content rounded-4 border-0 shadow-lg">
+        <div class="modal-header bg-warning text-white border-0 rounded-top-4">
+          <h5 class="modal-title fw-bold fs-4"><i class="fas fa-minus-circle me-3"></i>Toa Fedha</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-5">
+          <div class="alert alert-info rounded-4 mb-4">
+            <strong>Salio Linalopatikana: TZS 8,500,000</strong>
+          </div>
+          <div class="mb-4">
+            <label class="form-label fw-bold fs-5">Kiasi (TZS)</label>
+            <input type="number" id="withdrawAmount" class="form-control form-control-lg text-center fs-3" placeholder="0" min="1000">
+          </div>
+          <button class="btn btn-warning btn-lg w-100 rounded-pill py-4 shadow" onclick="submitWithdraw()">
+            <i class="fas fa-paper-plane me-3"></i>Omba Tozo
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Buy Shares Modal -->
+  <div class="modal fade" id="buySharesModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content rounded-4 border-0 shadow-lg">
+        <div class="modal-header bg-success text-white border-0 rounded-top-4">
+          <h5 class="modal-title fw-bold"><i class="fas fa-shopping-cart me-2"></i>Nunua Hisa</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4">
+          <ul class="nav nav-pills nav-fill mb-4" id="buySharesTab" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link active rounded-pill fw-bold" id="group-tab" data-bs-toggle="tab" data-bs-target="#buy-group" type="button">Kutoka kwa Kikundi</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link rounded-pill fw-bold" id="market-tab" data-bs-toggle="tab" data-bs-target="#buy-market" type="button">Soko la Hisa (Wanachama)</button>
+            </li>
+          </ul>
+          <div class="tab-content">
+            <!-- Buy from Group -->
+            <div class="tab-pane fade show active" id="buy-group" role="tabpanel">
+              <div class="alert alert-info rounded-3">
+                <i class="fas fa-info-circle me-2"></i>Bei ya hisa ya kikundi ni <strong>TZS 10,000</strong>. Unaweza kununua hisa 1 hadi 5 kwa mkupuo.
+              </div>
+              <form id="buyGroupSharesForm">
+                <div class="mb-3">
+                  <label class="form-label fw-bold">Idadi ya Hisa</label>
+                  <input type="number" class="form-control form-control-lg" id="groupShareQty" min="1" max="5" value="1" onchange="calcGroupTotal()" onkeyup="calcGroupTotal()">
+                </div>
+                <div class="mb-4">
+                  <label class="form-label fw-bold">Jumla ya Gharama</label>
+                  <input type="text" class="form-control form-control-lg bg-light" id="groupShareTotal" value="TZS 10,000" readonly>
+                </div>
+                <button type="button" class="btn btn-success w-100 rounded-pill py-3" onclick="submitBuyGroupShares()">Thibitisha Ununuzi</button>
+              </form>
+            </div>
+            <!-- Buy from Market -->
+            <div class="tab-pane fade" id="buy-market" role="tabpanel">
+              <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                  <thead class="bg-light">
+                    <tr>
+                      <th>Mwanachama</th>
+                      <th>Hisa</th>
+                      <th>Bei</th>
+                      <th>Hatua</th>
+                    </tr>
+                  </thead>
+                  <tbody id="marketSharesBody">
+                    <tr th:each="sale : ${marketShares}" th:if="${member != null and sale != null and sale.seller != null and sale.seller.id != member.id}">
+                      <td th:text="${sale.seller.fullName}">Amina Juma</td>
+                      <td th:text="${sale.quantity}">50</td>
+                      <td th:text="${sale.pricePerShare}">TZS 12,500</td>
+                      <td><button class="btn btn-sm btn-outline-success rounded-pill" 
+                                  th:data-id="${sale.id}"
+                                  th:data-price="${sale.pricePerShare}"
+                                  onclick="buyMarketShare(this)">Nunua</button></td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(marketShares)}">
+                        <td colspan="4" class="text-center text-muted">Hakuna hisa sokoni kwa sasa.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sell Shares Modal -->
+  <div class="modal fade" id="sellSharesModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content rounded-4 border-0 shadow-lg">
+        <div class="modal-header bg-danger text-white border-0 rounded-top-4">
+          <h5 class="modal-title fw-bold"><i class="fas fa-tag me-2"></i>Uza Hisa</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4">
+          <div class="alert alert-warning rounded-3">
+             <i class="fas fa-exclamation-triangle me-2"></i>Bei ya kuuza lazima iwe kati ya <strong>TZS 12,000</strong> na <strong>TZS 15,000</strong>.
+          </div>
+          <form id="sellSharesForm">
+            <div class="mb-3">
+              <label class="form-label fw-bold">Idadi ya Hisa za Kuuza</label>
+              <input type="number" class="form-control form-control-lg" id="sellShareQty" min="1" placeholder="Mf. 5">
+              <small class="text-muted">Unamiliki hisa: <span id="myShareCount" th:text="${shareCount}">42</span></small>
+            </div>
+            <div class="mb-4">
+              <label class="form-label fw-bold">Bei kwa Hisa (TZS)</label>
+              <input type="number" class="form-control form-control-lg" id="sellSharePrice" min="12000" max="15000" placeholder="12000 - 15000">
+            </div>
+            <button type="button" class="btn btn-danger w-100 rounded-pill py-3" onclick="submitSellShares()">Weka Sokoni</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script src="/js/app.js" defer></script>
+</body>
+</html>

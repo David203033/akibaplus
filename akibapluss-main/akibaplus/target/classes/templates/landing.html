@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Akiba Plus SACCOS — Kujenga Akiba, Kujenga Kinema</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" th:href="@{/css/landing.css}" />
+
+    <style>
+        :root{
+            --decius-navy: #0b2545;
+            --decius-teal: #00A6A6;
+            --decius-accent: #00B5E2;
+            --muted: #6c757d;
+            --bg: #f7f9fb;
+            --card: #ffffff;
+        }
+        body{ background: var(--bg); color:#1f2a44; font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; }
+        .navbar{ background: var(--decius-navy); }
+        .navbar-brand, .nav-link, .nav-item .btn { color: #fff !important; }
+        .hero-section{ padding: 6rem 0; background: linear-gradient(180deg, var(--decius-navy) 0%, rgba(11,37,69,0.9) 60%); color:#fff; }
+        .hero-title{ color: #fff; font-weight:700; }
+        .hero-sub{ color: rgba(255,255,255,0.9); }
+        .cta-primary{ background: var(--decius-teal); border: none; }
+        .section-title{ color: var(--decius-navy); font-weight:700; }
+        .feature-card, .service-box, .testimonial-box { background: var(--card); border-radius: 8px; padding: 1.25rem; box-shadow: 0 8px 20px rgba(11,37,69,0.06); }
+        .feature-icon, .service-icon{ font-size: 1.5rem; color: var(--decius-teal); margin-bottom: .5rem; }
+        .stats-section{ background: linear-gradient(90deg,var(--decius-accent),var(--decius-teal)); color: #fff; }
+        .loan-card{ background: #fff; border-radius: 8px; padding:1rem; box-shadow: 0 6px 18px rgba(11,37,69,0.06); }
+        footer.footer{ background: var(--decius-navy); color: #fff; }
+        .muted { color: var(--muted); }
+        @media (max-width: 767px){ .hero-section{ padding:3.5rem 0; } }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/">Akiba Plus SACCOS</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item"><a class="nav-link" href="#features">Features</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#services">Services</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#calculator">Loan Calculator</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#rates">Rates & Fees</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#governance">Governance</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
+                    <li class="nav-item ms-2"><a class="btn btn-outline-light btn-sm" href="/dashboard">Member Dashboard</a></li>
+                    <li class="nav-item ms-2"><a class="btn btn-primary btn-sm" href="/login">Sign In</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="mt-5 pt-5">
+        <section class="hero-section">
+            <div class="container">
+                <div class="row align-items-center">
+                    <div class="col-lg-6">
+                        <h1 class="display-5 hero-title">Weka akiba, Imarisha uchumi wako</h1>
+                        <p class="lead hero-sub">Huduma za kifedha zilizoundwa ili kukuza akiba, kutoa mikopo kwa utulivu, na kulinda mali za wanachama kwa viwango vya juu vya usalama.</p>
+                        <div class="mt-4">
+                            <a class="btn cta-primary btn-lg me-2" href="#services">Jiunge Sasa</a>
+                            <a class="btn btn-outline-light btn-lg" href="/login">Ingia</a>
+                        </div>
+                        <ul class="list-unstyled mt-4 muted">
+                            <li><strong>Usalama:</strong> Mfumo wa encryption na auditi ya mara kwa mara.</li>
+                            <li><strong>Rafiki kwa Simu:</strong> Muonekano uliochukuliwa kwa simu za mkononi.</li>
+                        </ul>
+                    </div>
+                    <div class="col-lg-6 text-center">
+                        <img src="/images/hero-fintech.svg" alt="Fintech illustration" class="img-fluid" style="max-height:360px;">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="features" class="py-5">
+            <div class="container">
+                <h2 class="section-title text-center mb-4">Huduma za Msingi</h2>
+                <p class="text-center muted mb-4">Tunatoa huduma zinazokidhi mahitaji ya wanachama: kuokoa, mikopo, usimamizi wa fedha, na huduma za dijitali.</p>
+                <div class="row g-4">
+                    <div class="col-md-6 col-lg-3">
+                        <div class="feature-card text-center">
+                            <div class="feature-icon"><i class="fas fa-piggy-bank"></i></div>
+                            <h5>Akiba Salama</h5>
+                            <p class="muted">Akaunti mbalimbali za kuokoa kwa malengo tofauti na usalama wa kiwango cha taasisi.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <div class="feature-card text-center">
+                            <div class="feature-icon"><i class="fas fa-hand-holding-dollar"></i></div>
+                            <h5>Mikopo Inayopangwa</h5>
+                            <p class="muted">Mikataba ya mikopo wazi, vigezo vilivyowekwa na nyakati za malipo zinazofaa wanachama.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <div class="feature-card text-center">
+                            <div class="feature-icon"><i class="fas fa-chart-line"></i></div>
+                            <h5>Ripoti & Ufuatiliaji</h5>
+                            <p class="muted">Ripoti za mara kwa mara za mashughuli na taarifa za utendaji wa akaunti.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <div class="feature-card text-center">
+                            <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
+                            <h5>Usalama & Uzingatiaji</h5>
+                            <p class="muted">Udhibiti wa ndani, encryption, na mchakato wa KYC/AML.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="services" class="py-5 bg-light">
+            <div class="container">
+                <h2 class="section-title text-center mb-4">Huduma Zaidi</h2>
+                <div class="row g-4">
+                    <div class="col-md-6 col-lg-4">
+                        <div class="service-box">
+                            <h5>Akiba Kwa Malengo</h5>
+                            <p class="muted mb-0">Akaunti maalum za kuokoa kwa elimu, nyumba, au biashara.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="service-box">
+                            <h5>Mikopo ya Biashara</h5>
+                            <p class="muted mb-0">Msaada kwa wajasiriamali na biashara ndogo ndogo kwa masharti ya upendeleo kwa wanachama.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="service-box">
+                            <h5>Huduma za Kidigitali</h5>
+                            <p class="muted mb-0">Malipo ya simu, taarifa za moja kwa moja, na muingiliano wa API kwa huduma za mtoa huduma.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="calculator" class="py-5">
+            <div class="container">
+                <div class="row align-items-center g-4">
+                    <div class="col-md-6">
+                        <h3 class="section-title mb-3">Loan Calculator</h3>
+                        <p class="muted">Tumia kalkuleta hii kupata makadirio ya malipo ya mkopo kwa kila mwezi.</p>
+                        <div class="loan-card">
+                            <form id="loanForm" onsubmit="return false;">
+                                <div class="mb-3">
+                                    <label class="form-label">Kiasi cha Mkopo (TZS)</label>
+                                    <input id="loanAmount" type="number" class="form-control" value="1000000" min="0" />
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Maana ya Malipo (miezi)</label>
+                                    <input id="loanTerm" type="number" class="form-control" value="12" min="1" />
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Riba ya Mwaka (%)</label>
+                                    <input id="loanRate" type="number" class="form-control" value="12" step="0.1" min="0" />
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <button class="btn btn-primary" onclick="calculateLoan()">Hesabu</button>
+                                    <div class="text-end">
+                                        <div class="muted small">Mwezi:</div>
+                                        <div id="monthlyPayment" class="fw-bold">-</div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h3 class="section-title mb-3">Rates & Fees</h3>
+                        <div class="card p-3">
+                            <ul class="list-unstyled mb-0">
+                                <li><strong>Riba ya Kawaida:</strong> 10% - 18% kwa mwaka (inategemea aina ya mkopo)</li>
+                                <li><strong>Ada ya Usindikaji:</strong> TZS 5,000 - 20,000</li>
+                                <li><strong>Ada za Kuchelewesha:</strong> Kwa mujibu wa sera ya kamati.</li>
+                            </ul>
+                            <p class="muted small mt-2">Tafadhali wasiliana na ofisi kwa taarifa kamili na vigezo vya mkopo.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="how-it-works" class="py-5 bg-light">
+            <div class="container">
+                <h2 class="section-title text-center mb-4">Jinsi Inavyofanya Kazi</h2>
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="feature-card">
+                            <h6>1. Jiunge</h6>
+                            <p class="muted mb-0">Kamilisha maelezo ya msingi, upitie KYC na uwe mwanachama.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="feature-card">
+                            <h6>2. Weka Akiba</h6>
+                            <p class="muted mb-0">Anzisha malengo ya kuokoa na uweke fedha kwa usalama.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="feature-card">
+                            <h6>3. Omba Mkopo</h6>
+                            <p class="muted mb-0">Wezesha ombi la mkopo, upitie tathmini, upokee utoaji kulingana na kiwango.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="testimonials" class="py-5">
+            <div class="container">
+                <h2 class="section-title text-center mb-4">Ushuhuda wa Wanachama</h2>
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="testimonial-box">
+                            <p class="mb-2">"Huduma imetuwezesha kuendeleza biashara na kuweka akiba bila wasiwasi."</p>
+                            <h6 class="mb-0">A. Mwangi</h6>
+                            <small class="muted">Mwanachama</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="testimonial-box">
+                            <p class="mb-2">"Mchakato wa mkopo ulikuwa wazi na msaada ulikuwa wa haraka."</p>
+                            <h6 class="mb-0">S. Nyerere</h6>
+                            <small class="muted">Mwanachama</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="testimonial-box">
+                            <p class="mb-2">"Ripoti na uwazi wa kifedha unafanya kazi kwa ufanisi kwa wanachama."</p>
+                            <h6 class="mb-0">M. John</h6>
+                            <small class="muted">Mwanachama</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="governance" class="py-5 bg-light">
+            <div class="container">
+                <h2 class="section-title text-center mb-3">Governance & Bylaws</h2>
+                <div class="row">
+                    <div class="col-lg-8">
+                        <p class="muted">Tunaendeshwa chini ya kanuni zilizoidhinishwa na wanachama. Kamati ya usimamizi inatoa sera za uwekezaji, mikopo, na usimamizi wa hatari. Wanachama wana haki ya kujiunga na vikao na kuchangia maamuzi ya msingi.</p>
+                        <a class="btn btn-outline-primary btn-sm" href="/governance">Soma Sera Kamili</a>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="card p-3">
+                            <h6>Key Documents</h6>
+                            <ul class="muted mb-0">
+                                <li>Bylaws.pdf</li>
+                                <li>Annual Report</li>
+                                <li>Risk Policy</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="security" class="py-5">
+            <div class="container">
+                <h2 class="section-title text-center mb-4">Usalama & Uzingatiaji</h2>
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="feature-card">
+                            <h6>Encryption</h6>
+                            <p class="muted mb-0">SSL/TLS kwa mawasiliano yote, hifadhi salama ya data.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="feature-card">
+                            <h6>Control Access</h6>
+                            <p class="muted mb-0">Authentication ya multi-factor na udhibiti wa idhini za watumiaji.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="feature-card">
+                            <h6>Audit & Monitoring</h6>
+                            <p class="muted mb-0">Log auditing na ufuatiliaji wa usalama kwa wakati halisi.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="contact" class="py-5 bg-light">
+            <div class="container">
+                <h2 class="section-title text-center mb-4">Wasiliana Nasi</h2>
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <form method="post" action="/contact">
+                            <div class="mb-3">
+                                <label class="form-label">Jina</label>
+                                <input type="text" name="name" class="form-control" required />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Barua Pepe</label>
+                                <input type="email" name="email" class="form-control" required />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Ujumbe</label>
+                                <textarea name="message" class="form-control" rows="4" required></textarea>
+                            </div>
+                            <button class="btn btn-primary">Tuma Ujumbe</button>
+                        </form>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card p-3">
+                            <h5>Ofisi</h5>
+                            <p class="muted mb-1">Dar es Salaam, Tanzania</p>
+                            <p class="muted mb-1">Simu: +255 123 456 789</p>
+                            <p class="muted mb-0">Barua pepe: info@akibaplus.co.tz</p>
+                            <hr />
+                            <h6>Branches & Agents</h6>
+                            <p class="muted small mb-0">Tuna matawi na mawakala katika mikoa kadhaa. Angalia ramani kwenye dashibodi.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer py-4">
+        <div class="container text-center">
+            <p class="mb-1 small">&copy; 2026 Akiba Plus SACCOS. Haki zote zimehifadhiwa.</p>
+            <p class="small muted mb-0">Kujenga Akiba, Kujenga Kinema</p>
+        </div>
+    </footer>
+
+    <script>
+        function calculateLoan(){
+            const P = parseFloat(document.getElementById('loanAmount').value) || 0;
+            const months = parseInt(document.getElementById('loanTerm').value) || 1;
+            const annualRate = parseFloat(document.getElementById('loanRate').value) || 0;
+            const r = annualRate / 100 / 12;
+            let monthly = 0;
+            if (r === 0) { monthly = P / months; }
+            else {
+                monthly = (P * r) / (1 - Math.pow(1 + r, -months));
+            }
+            document.getElementById('monthlyPayment').textContent = monthly > 0 ? monthly.toLocaleString('en-KE', { style: 'currency', currency: 'TZS' }) : '-';
+        }
+        document.addEventListener('DOMContentLoaded', function(){ calculateLoan(); });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

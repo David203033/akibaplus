@@ -1,0 +1,2540 @@
+<!DOCTYPE html>
+<html lang="sw" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Portal - AkibaPlus SACCOS</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link rel="icon" href="data:,">
+  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
+  <!-- <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.0/dist/tesseract.min.js"></script> -->
+  <link href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" rel="stylesheet">
+  <!-- Load admin.js early so functions are available for onclick handlers -->
+  <script src="/js/admin.js"></script>
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+
+  <!-- Mobile Overlay -->
+  <div class="overlay" onclick="closeMobileMenu()"></div>
+
+  <!-- Top Navbar -->
+  <nav class="navbar navbar-dark fixed-top">
+    <div class="container-fluid">
+      <button class="btn btn-outline-light mobile-menu-btn me-3" onclick="toggleMobileMenu()">
+        <i class="fas fa-bars fs-4"></i>
+      </button>
+      <a class="navbar-brand fw-bold fs-4" href="#">AkibaPlus Admin</a>
+      <div class="d-flex align-items-center gap-4">
+        <span id="currentDate" class="text-white small"><i class="fas fa-calendar me-2"></i></span>
+        <div class="dropdown">
+          <a class="text-white dropdown-toggle d-flex align-items-center gap-2" href="#" data-bs-toggle="dropdown">
+            <i class="fas fa-user-shield fa-2x"></i>
+            <span class="d-none d-md-inline fw-medium" th:text="${adminName ?: 'Msimamizi'}">Msimamizi</span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end shadow-lg">
+            <li><a class="dropdown-item" href="#"><i class="fas fa-user me-3"></i>Profile Yangu</a></li>
+            <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-3"></i>Mipangilio</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item text-danger" th:href="@{/logout}"><i class="fas fa-sign-out-alt me-3"></i>Toka</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="p-4 text-center mb-4 border-bottom border-secondary">
+      <h4 class="fw-bold text-white mb-0">AkibaPlus</h4>
+      <small class="text-white-50">Portal ya Msimamizi</small>
+    </div>
+    <ul class="nav flex-column px-3">
+      <li><a class="nav-link active" onclick="loadPage('dashboard')"><i class="fas fa-home"></i> Dashboard</a></li>
+      <li><a class="nav-link" onclick="loadPage('members')"><i class="fas fa-users"></i> Wanachama</a></li>
+      <li><a class="nav-link" onclick="loadPage('loans')"><i class="fas fa-file-invoice-dollar"></i> Mikopo</a></li>
+      <li><a class="nav-link" onclick="loadPage('savings')"><i class="fas fa-piggy-bank"></i> Akiba</a></li>
+      <li><a class="nav-link" onclick="loadPage('shares-dividends')"><i class="fas fa-chart-pie"></i> Hisa</a></li>
+      <!-- <li><a class="nav-link" onclick="loadPage('dividends')"><i class="fas fa-gift"></i> Gawio</a></li> -->
+      <li><a class="nav-link" onclick="loadPage('expenses')"><i class="fas fa-receipt"></i> Matumizi</a></li>
+      <li><a class="nav-link" onclick="loadPage('fines')"><i class="fas fa-exclamation-triangle"></i> Faini</a></li>
+      <li><a class="nav-link" onclick="loadPage('meetings')"><i class="fas fa-calendar-check"></i> Mikutano</a></li>
+      <li><a class="nav-link" onclick="loadPage('notifications')"><i class="fas fa-bell"></i> Arifa</a></li>
+      <li><a class="nav-link" onclick="loadPage('reports')"><i class="fas fa-chart-bar"></i> Ripoti</a></li>
+      <li><a class="nav-link" onclick="loadPage('audit-logs')"><i class="fas fa-history"></i> Audit Logs</a></li>
+      <li><a class="nav-link" onclick="loadPage('users')"><i class="fas fa-user-tie"></i> Watumiaji</a></li>
+      <li><a class="nav-link" onclick="loadPage('settings')"><i class="fas fa-cog"></i> Mipangilio</a></li>
+    </ul>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content pt-5 mt-5">
+    <div class="container-fluid">
+
+      <!-- Dashboard Page -->
+      <div id="dashboard" class="page active">
+        <!-- Full Dashboard content from your original file -->
+        <div class="mb-5">
+          <h2 class="fw-bold text-dark mb-2"><i class="fas fa-chart-line me-3 text-primary"></i>Dashboard ya Msimamizi</h2>
+          <p class="text-muted fs-5">Muhtasari wa shughuli za AkibaPlus SACCOS</p>
+        </div>
+
+        <div class="row g-4 mb-5">
+          <div class="col-md-6 col-lg-3">
+            <div class="stat-card p-4">
+              <div class="d-flex justify-content-between align-items-start">
+                <div>
+                  <p class="text-muted small mb-2">Wanachama Jumla</p>
+                  <h3 class="fw-bold text-primary mb-0" th:text="${dashboardStats['totalMembers'] ?: 0}">0</h3>
+                  <small class="text-success" th:text="'+' + (${dashboardStats['newMembersThisMonth']} ?: 0) + ' mwezi huu'">+0 mwezi huu</small>
+                </div>
+                <div class="stat-icon bg-primary bg-opacity-10 text-primary"><i class="fas fa-users"></i></div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-3">
+            <div class="stat-card p-4">
+              <div class="d-flex justify-content-between align-items-start">
+                <div>
+                  <p class="text-muted small mb-2">Akiba Jumla</p>
+                  <h3 class="fw-bold text-success mb-0" th:text="'TZS ' + ${#numbers.formatDecimal(dashboardStats['totalSavings'] ?: 0, 1, 'COMMA', 0, 'POINT')}">TZS 0</h3>
+                  <small class="text-success" th:text="'+' + (${dashboardStats['savingsGrowthPercentage']} ?: 0) + '% vs mwaka jana'">+0% vs mwaka jana</small>
+                </div>
+                <div class="stat-icon bg-success bg-opacity-10 text-success"><i class="fas fa-piggy-bank"></i></div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-3">
+            <div class="stat-card p-4">
+              <div class="d-flex justify-content-between align-items-start">
+                <div>
+                  <p class="text-muted small mb-2">Mikopo Inayotumika</p>
+                  <h3 class="fw-bold text-info mb-0" th:text="'TZS ' + ${#numbers.formatDecimal(dashboardStats['activeLoansAmount'] ?: 0, 1, 'COMMA', 0, 'POINT')}">TZS 0</h3>
+                  <small class="text-info" th:text="(${dashboardStats['activeLoansCount']} ?: 0) + ' mikopo'">0 mikopo</small>
+                </div>
+                <div class="stat-icon bg-info bg-opacity-10 text-info"><i class="fas fa-money-bill-wave"></i></div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-3">
+            <div class="stat-card p-4">
+              <div class="d-flex justify-content-between align-items-start">
+                <div>
+                  <p class="text-muted small mb-2">Maombi Yanayosubiri</p>
+                  <h3 class="fw-bold text-warning mb-0" th:text="${dashboardStats['pendingRequestsCount'] ?: 0}">0</h3>
+                  <small class="text-warning" th:text="(${dashboardStats['pendingLoansCount']} ?: 0) + ' mikopo • ' + (${dashboardStats['pendingMembersCount']} ?: 0) + ' wanachama'">0 mikopo • 0 wanachama</small>
+                </div>
+                <div class="stat-icon bg-warning bg-opacity-10 text-warning"><i class="fas fa-clock"></i></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-4 mb-5">
+          <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4">
+              <div class="card-header p-4 bg-transparent border-0">
+                <h5 class="fw-bold mb-0">Ukuaji wa Akiba na Mikopo (2025 - 2026)</h5>
+              </div>
+              <div class="card-body p-4">
+                <canvas id="dashGrowthChart" height="300"></canvas>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4">
+              <div class="card-header p-4 bg-transparent border-0">
+                <h5 class="fw-bold mb-0">Mgao wa Mali</h5>
+              </div>
+              <div class="card-body p-4 text-center">
+                <canvas id="dashPortfolioChart" height="300"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-4">
+          <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4">
+              <div class="card-header p-4 bg-transparent border-0">
+                <h5 class="fw-bold mb-0">Utendaji wa Mikopo</h5>
+              </div>
+              <div class="card-body p-4">
+                <div class="mb-3">
+                  <div class="d-flex justify-content-between mb-2">
+                    <small class="fw-semibold">Malipo ya Wakati</small>
+                    <small class="fw-semibold" th:text="(${dashboardStats['onTimeRepaymentRate']} ?: 0) + '%'">0%</small>
+                  </div>
+                  <div class="progress" style="height: 8px;">
+                    <div class="progress-bar bg-success" th:style="'width: ' + (${dashboardStats['onTimeRepaymentRate']} ?: 0) + '%'"></div>
+                  </div>
+                </div>
+                <div class="mb-3">
+                  <div class="d-flex justify-content-between mb-2">
+                    <small class="fw-semibold">Salio Lililobaki</small>
+                    <small class="fw-semibold" th:text="'TZS ' + ${#numbers.formatDecimal(dashboardStats['totalOutstandingLoans'] ?: 0, 1, 'COMMA', 0, 'POINT')}">TZS 0</small>
+                  </div>
+                  <div class="progress" style="height: 8px;">
+                    <div class="progress-bar bg-info" th:style="'width: ' + (${dashboardStats['outstandingLoansPercentage']} ?: 0) + '%'"></div>
+                  </div>
+                </div>
+                <div class="mb-3">
+                  <div class="d-flex justify-content-between mb-2">
+                    <small class="fw-semibold">NPL Ratio</small>
+                    <small class="fw-semibold text-danger" th:text="(${dashboardStats['nplRatio']} ?: 0) + '%'">0%</small>
+                  </div>
+                  <div class="progress" style="height: 8px;">
+                    <div class="progress-bar bg-danger" th:style="'width: ' + (${dashboardStats['nplRatio']} ?: 0) + '%'"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4">
+              <div class="card-header p-4 bg-transparent border-0">
+                <h5 class="fw-bold mb-0">Shughuli za Hivi Karibuni</h5>
+              </div>
+              <div class="card-body p-0">
+                <div class="activity-feed">
+                  <div class="activity-item p-3 border-bottom" th:each="activity : ${recentActivities}">
+                    <div class="d-flex">
+                      <div class="activity-icon me-3"><i th:class="${activity.icon} + ' ' + ${activity.color}"></i></div>
+                      <div class="flex-grow-1">
+                        <p class="mb-1 small fw-semibold" th:text="${activity.title}">Activity</p>
+                        <small class="text-muted" th:text="${activity.desc}">Description</small>
+                        <small class="d-block text-muted mt-1" th:text="${activity.time}">Time</small>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="p-3 text-center text-muted" th:if="${#lists.isEmpty(recentActivities)}">
+                    Hakuna shughuli za hivi karibuni.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-4 mt-4">
+          <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4">
+              <div class="card-header p-4 bg-transparent border-0">
+                <h5 class="fw-bold mb-0">Arifa za Mfumo</h5>
+              </div>
+              <div class="card-body p-4">
+                <div th:each="notif : ${systemNotifications}" th:class="'alert alert-' + ${notif.type} + ' alert-dismissible fade show mb-3'" role="alert">
+                  <i th:class="${notif.icon} + ' me-2'"></i>
+                  <strong th:text="${notif.message}">Message</strong>
+                  <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4">
+              <div class="card-header p-4 bg-transparent border-0">
+                <h5 class="fw-bold mb-0">Hatua za Haraka</h5>
+              </div>
+              <div class="card-body p-4">
+                <button class="btn btn-primary w-100 mb-3 rounded-pill py-3" onclick="loadPage('members')">
+                  <i class="fas fa-users me-3"></i>Dhibiti Wanachama
+                </button>
+                <button class="btn btn-success w-100 mb-3 rounded-pill py-3" onclick="loadPage('loans')">
+                  <i class="fas fa-file-invoice-dollar me-3"></i>Idhinisha Mikopo
+                </button>
+                <button class="btn btn-info w-100 mb-3 rounded-pill py-3 text-white" onclick="loadPage('expenses')">
+                  <i class="fas fa-receipt me-3"></i>Rekodi Matumizi
+                </button>
+                <button class="btn btn-warning w-100 rounded-pill py-3" onclick="loadPage('reports')">
+                  <i class="fas fa-file-pdf me-3"></i>Tengeneza Ripoti
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+     <!-- Members Page - Improved & Professional (Kiswahili) -->
+<div id="members" class="page">
+    <!-- Page Header -->
+    <div class="mb-5">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h2 class="fw-bold text-dark mb-2">
+            <i class="fas fa-users me-3 text-primary"></i>Usimamizi wa Wanachama
+          </h2>
+          <p class="text-muted fs-5">Dhibiti akaunti na taarifa za wanachama wote wa AkibaPlus SACCOS</p>
+        </div>
+        <div class="text-end">
+          <span class="badge bg-warning fs-6 px-3 py-2" th:if="${memberStats['pendingMembers'] > 0}">
+            <i class="fas fa-clock me-2"></i>12 Maombi Yanayosubiri
+          </span>
+        </div>
+      </div>
+    </div>
+  
+    <!-- KPI Stats Cards - Animated like Dashboard -->
+    <div class="row g-4 mb-5">
+      <div class="col-md-6 col-lg-3">
+        <div class="stat-card p-4" data-aos="fade-up">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <p class="text-muted small mb-2">Jumla ya Wanachama</p>
+              <h3 class="fw-bold text-primary mb-0" th:text="${memberStats['totalMembers'] ?: 0}">0</h3>
+              <small class="text-success mt-2 d-block" th:if="${memberStats['newMembersThisMonth'] > 0}">
+                <i class="fas fa-arrow-up me-1"></i>+48 mwezi huu
+              </small>
+            </div>
+            <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+              <i class="fas fa-users"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+      <div class="col-md-6 col-lg-3">
+        <div class="stat-card p-4" data-aos="fade-up" data-aos-delay="100">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <p class="text-muted small mb-2">Wanachama Wanaotumika</p>
+              <h3 class="fw-bold text-success mb-0" th:text="${memberStats['activeMembers'] ?: 0}">0</h3>
+              <small class="text-success mt-2 d-block" th:text="(${memberStats['activePercentage']} ?: 0) + '% ya jumla'">0% ya jumla</small>
+            </div>
+            <div class="stat-icon bg-success bg-opacity-10 text-success">
+              <i class="fas fa-check-circle"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+      <div class="col-md-6 col-lg-3">
+        <div class="stat-card p-4" data-aos="fade-up" data-aos-delay="200">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <p class="text-muted small mb-2">Waliotulia / Wasio Tumika</p>
+              <h3 class="fw-bold text-warning mb-0" th:text="${memberStats['inactiveMembers'] ?: 0}">0</h3>
+              <small class="text-warning mt-2 d-block" th:text="(${memberStats['inactivePercentage']} ?: 0) + '% ya jumla'">0% ya jumla</small>
+            </div>
+            <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+              <i class="fas fa-pause-circle"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+      <div class="col-md-6 col-lg-3">
+        <div class="stat-card p-4" data-aos="fade-up" data-aos-delay="300">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <p class="text-muted small mb-2">Maombi Yanayosubiri</p>
+              <h3 class="fw-bold text-info mb-0" th:text="${memberStats['pendingMembers'] ?: 0}">0</h3>
+              <small class="text-info mt-2 d-block">Yanahitaji uthibitisho</small>
+            </div>
+            <div class="stat-icon bg-info bg-opacity-10 text-info">
+              <i class="fas fa-hourglass-half"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Search & Filters -->
+    <div class="card border-0 shadow-sm mb-5" data-aos="fade-up">
+      <div class="card-body p-4">
+        <div class="row g-3 align-items-end">
+          <div class="col-lg-5">
+            <label class="form-label fw-semibold text-muted small">Tafuta Mwanachama</label>
+            <input type="text" class="form-control form-control-lg" id="memberSearchInput" placeholder="Jina, namba ya uanachama, simu au barua pepe..." onkeyup="filterMembers()">
+          </div>
+          <div class="col-lg-2">
+            <label class="form-label fw-semibold text-muted small">Hali ya Akaunti</label>
+            <select class="form-select" id="memberStatusFilter" onchange="filterMembers()">
+              <option value="">Hali Zote</option>
+              <option value="ACTIVE">Anatumika</option>
+              <option value="INACTIVE">Hatumiki</option>
+              <option value="SUSPENDED">Amesimamishwa</option>
+              <option value="PENDING">Anasubiri Idhini</option>
+            </select>
+          </div>
+          <div class="col-lg-2">
+            <label class="form-label fw-semibold text-muted small">Panga Kwa</label>
+            <select class="form-select" id="memberSortBy" onchange="filterMembers()">
+              <option value="name">Jina</option>
+              <option value="date">Tarehe ya Kujiunga</option>
+              <option value="balance">Salio la Akaunti</option>
+              <option value="shares">Idadi ya Hisa</option>
+            </select>
+          </div>
+          <div class="col-lg-3">
+            <div class="d-flex gap-2">
+              <button class="btn btn-outline-secondary flex-grow-1" onclick="exportMembers()">
+                <i class="fas fa-download me-2"></i>Hamisha (Excel)
+              </button>
+              <button class="btn btn-outline-info" onclick="printMembersList()">
+                <i class="fas fa-print me-2"></i>Chapa
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Members Table -->
+    <div class="card border-0 shadow-sm" data-aos="fade-up" data-aos-delay="100">
+      <div class="card-header bg-transparent border-bottom py-3">
+        <h5 class="mb-0 fw-bold">
+          <i class="fas fa-list me-2 text-primary"></i>Orodha ya Wanachama
+          <span class="text-muted ms-3 small">(Inaonyesha 1 - 50 kati ya 1,248)</span>
+        </h5>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0 align-middle">
+            <thead class="bg-light">
+              <tr>
+                <th class="fw-semibold ps-4">Jina la Mwanachama</th>
+                <th class="fw-semibold">Namba ya Uanachama</th>
+                <th class="fw-semibold">Mawasiliano</th>
+                <th class="fw-semibold">Tarehe ya Kujiunga</th>
+                <th class="fw-semibold">Hali</th>
+                <th class="fw-semibold">Salio la Akaunti</th>
+                <th class="fw-semibold text-center">Hatua</th>
+              </tr>
+            </thead>
+            <tbody id="membersTableBody">
+              <!-- Data itajazwa na JavaScript -->
+              <tr th:each="member : ${membersList}">
+                <td class="fw-semibold ps-4" th:text="${member.name}">Member Name</td>
+                <td th:text="${member['id']}">ID</td>
+                <td th:text="${member.phone}">Phone</td>
+                <td th:text="${#temporals.format(member.joinDate, 'dd-MMM-yyyy')}">Date</td>
+                <td>
+                  <span class="badge" th:classappend="${member.status == 'ACTIVE'} ? 'bg-success' : 'bg-warning'" th:text="${member.status}">Active</span>
+                </td>
+                <td th:text="'TZS ' + ${#numbers.formatDecimal(member.balance, 1, 'COMMA', 0, 'POINT')}">Balance</td>
+                <td class="text-center"><button class="btn btn-sm btn-outline-primary">View</button></td>
+              </tr>
+              <tr th:if="${#lists.isEmpty(membersList)}">
+                <td colspan="7" class="text-center text-muted py-4">Hakuna wanachama waliorikodiwa.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card-footer bg-transparent border-top py-3">
+        <nav aria-label="Ukurasa wa wanachama">
+          <ul class="pagination justify-content-center mb-0" id="memberPagination">
+            <!-- Pagination links zitajazwa na JS -->
+          </ul>
+        </nav>
+      </div>
+    </div>
+  
+<!-- Floating Action Button - Ongeza Mwanachama -->
+<button class="btn btn-primary btn-lg rounded-circle shadow-lg position-fixed bottom-0 end-0 m-4 p-4" 
+        style="width: 70px; height: 70px; z-index: 1050;" 
+        data-bs-toggle="modal" data-bs-target="#addMemberModal"
+        id="addMemberFAB">
+  <i class="fas fa-user-plus fs-3"></i>
+</button>
+
+<!-- Closing Members Page Div -->
+</div>
+<!-- Modal ya Kuongeza Mwanachama Mpya -->
+<div class="modal fade" id="addMemberModal" tabindex="-1" aria-labelledby="addMemberModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content border-0 shadow-lg">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title fw-bold" id="addMemberModalLabel">
+          <i class="fas fa-user-plus me-3"></i>Ongeza Mwanachama Mpya
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Funga"></button>
+      </div>
+      <div class="modal-body p-4">
+        <form id="addMemberForm" novalidate>
+          <div class="row g-4">
+            <!-- Jina Kamili -->
+            <div class="col-md-6">
+              <label for="fullName" class="form-label fw-semibold">Jina Kamili <span class="text-danger">*</span></label>
+              <input type="text" class="form-control form-control-lg" id="fullName" placeholder="mf. John Peter Mwangi" required>
+              <div class="invalid-feedback">Tafadhali jaza jina kamili</div>
+            </div>
+
+            <!-- Namba ya Simu -->
+            <div class="col-md-6">
+              <label for="phone" class="form-label fw-semibold">Namba ya Simu <span class="text-danger">*</span></label>
+              <input type="tel" class="form-control form-control-lg" id="phone" placeholder="mf. 0712 345 678" required>
+              <div class="invalid-feedback">Tafadhali jaza namba halali ya simu</div>
+            </div>
+
+            <!-- Barua Pepe -->
+            <div class="col-md-6">
+              <label for="email" class="form-label fw-semibold">Barua Pepe (Hiari)</label>
+              <input type="email" class="form-control form-control-lg" id="email" placeholder="mf. john@example.com">
+            </div>
+
+            <!-- Tarehe ya Kuzaliwa -->
+            <div class="col-md-6">
+              <label for="dob" class="form-label fw-semibold">Tarehe ya Kuzaliwa <span class="text-danger">*</span></label>
+              <input type="date" class="form-control form-control-lg" id="dob" required>
+              <div class="invalid-feedback">Tafadhali chagua tarehe ya kuzaliwa</div>
+            </div>
+
+            <!-- Jinsia -->
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Jinsia <span class="text-danger">*</span></label>
+              <select class="form-select form-select-lg" id="gender" required>
+                <option value="">Chagua jinsia</option>
+                <option value="MALE">Mwanaume</option>
+                <option value="FEMALE">Mwanamke</option>
+              </select>
+              <div class="invalid-feedback">Tafadhali chagua jinsia</div>
+            </div>
+
+            <!-- Namba ya Kitambulisho -->
+            <div class="col-md-8">
+              <label for="idNumber" class="form-label fw-semibold">Namba ya Kitambulisho (NIDA/ID) <span class="text-danger">*</span></label>
+              <input type="text" class="form-control form-control-lg" id="idNumber" placeholder="mf. 19901234-12345-00001-23" required>
+              <div class="invalid-feedback">Tafadhali jaza namba ya kitambulisho</div>
+            </div>
+
+            <!-- Anuani -->
+            <div class="col-12">
+              <label for="address" class="form-label fw-semibold">Anuani ya Makazi <span class="text-danger">*</span></label>
+              <textarea class="form-control form-control-lg" id="address" rows="2" placeholder="Mtaa, Wilaya, Mkoa..." required></textarea>
+              <div class="invalid-feedback">Tafadhali jaza anuani</div>
+            </div>
+
+            <!-- Mdhamini -->
+            <div class="col-md-6">
+              <label for="guarantor" class="form-label fw-semibold">Jina la Mdhamini <span class="text-danger">*</span></label>
+              <input type="text" class="form-control form-control-lg" id="guarantor" placeholder="Jina la mdhamini" required>
+              <div class="invalid-feedback">Tafadhali jaza jina la mdhamini</div>
+            </div>
+
+            <!-- Namba ya Simu ya Mdhamini -->
+            <div class="col-md-6">
+              <label for="guarantorPhone" class="form-label fw-semibold">Simu ya Mdhamini <span class="text-danger">*</span></label>
+              <input type="tel" class="form-control form-control-lg" id="guarantorPhone" placeholder="mf. 0655 123 456" required>
+              <div class="invalid-feedback">Tafadhali jaza simu ya mdhamini</div>
+            </div>
+
+            <!-- Aina ya Uanachama -->
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Aina ya Uanachama</label>
+              <select class="form-select form-select-lg" id="membershipType">
+                <option value="ORDINARY">Wa Kawaida</option>
+                <option value="YOUTH">Vijana (chini ya miaka 35)</option>
+                <option value="SENIOR">Wazee (zaidi ya miaka 60)</option>
+              </select>
+            </div>
+
+            <!-- Kiasi cha Hisa za Awali -->
+            <div class="col-md-6">
+              <label for="initialShares" class="form-label fw-semibold">Hisa za Awali (TZS)</label>
+              <input type="number" class="form-control form-control-lg" id="initialShares" value="100000" min="50000">
+              <small class="text-muted">Kiwango cha chini: TZS 50,000</small>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer border-0 pt-3">
+        <button type="button" class="btn btn-outline-secondary btn-lg px-5" data-bs-dismiss="modal">
+          <i class="fas fa-times me-2"></i>Funga
+        </button>
+        <button type="button" class="btn btn-primary btn-lg px-5" onclick="saveNewMember()">
+          <i class="fas fa-save me-2"></i>Hifadhi Mwanachama
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- End Add Member Modal -->
+
+<!-- Loans Page - Full & Final Version (Kiswahili, Professional, Hakuna FAB) -->
+<div id="loans" class="page">
+    <!-- Page Header -->
+    <div class="mb-5">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h2 class="fw-bold text-dark mb-2">
+            <i class="fas fa-file-invoice-dollar me-3 text-primary"></i>Usimamizi wa Mikopo
+          </h2>
+          <p class="text-muted fs-5">Angalia, idhinisha na fuatilia mikopo yote ya wanachama wa AkibaPlus SACCOS</p>
+        </div>
+        <!-- <div class="text-end">
+          <button class="btn btn-warning btn-lg px-5 py-3 shadow-sm rounded-pill" onclick="showPendingLoansTab()">
+            <i class="fas fa-clock me-3 fs-5"></i>
+            Angalia Maombi Yanayosubiri
+            <span class="badge bg-dark ms-2 fs-5" id="loansPendingBadge">12</span>
+          </button>
+        </div> -->
+      </div>
+  
+      <!-- Additional Summary Badge
+      <div class="d-flex justify-content-end">
+        <span class="badge bg-danger fs-6 px-4 py-3">
+          <i class="fas fa-exclamation-triangle me-2"></i>
+          Mikopo Hatari: <strong><span id="loansAtRiskBadge">5</span></strong>
+        </span>
+      </div> -->
+    </div>
+  
+    <!-- KPI Stats Cards - Animated -->
+    <div class="row g-4 mb-5">
+      <div class="col-md-6 col-lg-3">
+        <div class="stat-card p-4" data-aos="fade-up">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <p class="text-muted small mb-2">Mikopo Inayotumika</p>
+              <h3 class="fw-bold text-primary mb-0" th:text="${loanStats['activeLoansCount'] ?: 0}">0</h3>
+              <small class="text-primary mt-2 d-block" th:text="'Jumla ya wanachama ' + (${loanStats['activeLoansCount']} ?: 0)">Jumla ya wanachama 0</small>
+            </div>
+            <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+              <i class="fas fa-hand-holding-usd"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+      <div class="col-md-6 col-lg-3">
+        <div class="stat-card p-4" data-aos="fade-up" data-aos-delay="100">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <p class="text-muted small mb-2">Jumla ya Kundi la Mikopo</p>
+              <h3 class="fw-bold text-success mb-0" th:text="'TZS ' + ${#numbers.formatDecimal(loanStats['totalLoanPortfolio'] ?: 0, 1, 'COMMA', 0, 'POINT')}">TZS 0</h3>
+              <small class="text-success mt-2 d-block" th:text="'+' + (${loanStats['portfolioGrowth']} ?: 0) + '% vs mwezi uliopita'">+0% vs mwezi uliopita</small>
+            </div>
+            <div class="stat-icon bg-success bg-opacity-10 text-success">
+              <i class="fas fa-chart-line"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+      <div class="col-md-6 col-lg-3">
+        <div class="stat-card p-4" data-aos="fade-up" data-aos-delay="200">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <p class="text-muted small mb-2">Salio Lisilolipwa</p>
+              <h3 class="fw-bold text-warning mb-0" th:text="'TZS ' + ${#numbers.formatDecimal(loanStats['outstandingAmount'] ?: 0, 1, 'COMMA', 0, 'POINT')}">TZS 0</h3>
+              <small class="text-warning mt-2 d-block" th:text="(${loanStats['outstandingPercentage']} ?: 0) + '% ya jumla'">0% ya jumla</small>
+            </div>
+            <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+              <i class="fas fa-hourglass-half"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+      <div class="col-md-6 col-lg-3">
+        <div class="stat-card p-4" data-aos="fade-up" data-aos-delay="300">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <p class="text-muted small mb-2">Uwiano wa Mikopo Isiyolipwa (NPL)</p>
+              <h3 class="fw-bold text-danger mb-0" th:text="(${loanStats['nplRatio']} ?: 0) + '%'">0%</h3>
+              <small class="text-danger mt-2 d-block" th:text="(${loanStats['nplRatio']} ?: 0) < 10 ? 'Chini ya kiwango salama (10%)' : 'Juu ya kiwango salama (10%)'">Chini ya kiwango salama (10%)</small>
+            </div>
+            <div class="stat-icon bg-danger bg-opacity-10 text-danger">
+              <i class="fas fa-exclamation-circle"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+  
+    <!-- Tabs Navigation -->
+    <ul class="nav nav-tabs mb-5 border-bottom-0" role="tablist" data-aos="fade-up">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active px-4 py-3 fs-5 fw-semibold" id="allLoans-tab" data-bs-toggle="tab" data-bs-target="#allLoans" type="button">
+          <i class="fas fa-list me-2"></i>Mikopo Yote
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link px-4 py-3 fs-5 fw-semibold" id="pendingLoans-tab" data-bs-toggle="tab" data-bs-target="#pendingLoans" type="button">
+          <i class="fas fa-clock me-2"></i>Yanayosubiri Idhini
+          <span class="badge bg-warning rounded-pill ms-2" th:text="${loanStats['pendingLoansCount'] ?: 0}">0</span>
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link px-4 py-3 fs-5 fw-semibold" id="atRiskLoans-tab" data-bs-toggle="tab" data-bs-target="#atRiskLoans" type="button">
+          <i class="fas fa-exclamation-triangle me-2"></i>Hatari
+          <span class="badge bg-danger rounded-pill ms-2" th:text="${loanStats['atRiskLoansCount'] ?: 0}">0</span>
+        </button>
+      </li>
+    </ul>
+  
+    <!-- Tab Content -->
+    <div class="tab-content">
+  
+      <!-- Tab 1: Mikopo Yote -->
+      <div class="tab-pane fade show active" id="allLoans" role="tabpanel">
+        <!-- Search & Filters -->
+        <div class="card border-0 shadow-sm mb-4" data-aos="fade-up">
+          <div class="card-body p-4">
+            <div class="row g-3 align-items-end">
+              <div class="col-lg-4">
+                <label class="form-label fw-semibold text-muted small">Tafuta Mkopo</label>
+                <input type="text" class="form-control form-control-lg" placeholder="Jina la mwanachama, namba ya mkopo, au aina..." onkeyup="filterAllLoans()">
+              </div>
+              <div class="col-lg-3">
+                <label class="form-label fw-semibold text-muted small">Aina ya Mkopo</label>
+                <select class="form-select form-select-lg">
+                  <option value="">Aina Zote</option>
+                  <option>Dharura</option>
+                  <option>Maendeleo</option>
+                  <option>Elimu</option>
+                  <option>Biashara</option>
+                </select>
+              </div>
+              <div class="col-lg-3">
+                <label class="form-label fw-semibold text-muted small">Hali ya Mkopo</label>
+                <select class="form-select form-select-lg">
+                  <option value="">Hali Zote</option>
+                  <option>Anatumika</option>
+                  <option>Imelipwa</option>
+                  <option>Hatari</option>
+                </select>
+              </div>
+              <div class="col-lg-2">
+                <button class="btn btn-outline-secondary btn-lg w-100">
+                  <i class="fas fa-download me-2"></i>Hamisha
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+  
+        <!-- Loans Table -->
+        <div class="card border-0 shadow-sm" data-aos="fade-up" data-aos-delay="100">
+          <div class="card-header bg-transparent border-bottom py-3">
+            <h5 class="mb-0 fw-bold">
+              <i class="fas fa-table me-2 text-primary"></i>Orodha ya Mikopo Inayotumika
+              <span class="text-muted ms-3 small">(Inaonyesha 1 - 50 kati ya 142)</span>
+            </h5>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover mb-0 align-middle">
+                <thead class="bg-light">
+                  <tr>
+                    <th class="fw-semibold ps-4">Mwanachama</th>
+                    <th class="fw-semibold">Kiasi cha Mkopo</th>
+                    <th class="fw-semibold">Aina</th>
+                    <th class="fw-semibold">Salio Lililobaki</th>
+                    <th class="fw-semibold">Tarehe ya Kutolewa</th>
+                    <th class="fw-semibold">Tarehe ya Mwisho</th>
+                    <th class="fw-semibold">Hali</th>
+                    <th class="fw-semibold text-center">Hatua</th>
+                  </tr>
+                </thead>
+                <tbody id="allLoansBody">
+                  <tr th:each="l : ${loansList}">
+                    <td class="fw-semibold ps-4" th:text="${l.member}">Member</td>
+                    <td th:text="${l.amount}">Amount</td>
+                    <td th:text="${l.type}">Type</td>
+                    <td th:text="${l.balance}">Balance</td>
+                    <td th:text="${l.date}">Date</td>
+                    <td th:text="${l.dueDate}">Due Date</td>
+                    <td><span class="badge bg-success" th:text="${l.status}">Active</span></td>
+                    <td class="text-center"><button class="btn btn-sm btn-outline-primary">View</button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card-footer bg-transparent border-top py-3">
+            <nav aria-label="Ukurasa wa mikopo">
+              <ul class="pagination justify-content-center mb-0" id="allLoansPagination">
+                <!-- Pagination links zitajazwa na JS -->
+              </ul>
+            </nav>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Tab 2: Yanayosubiri Idhini -->
+      <div class="tab-pane fade" id="pendingLoans" role="tabpanel">
+        <div class="card border-0 shadow-sm" data-aos="fade-up">
+          <div class="card-header bg-transparent border-bottom py-3">
+            <h5 class="mb-0 fw-bold text-warning">
+              <i class="fas fa-clock me-2"></i>Maombi ya Mikopo Yanayosubiri Idhini
+            </h5>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover mb-0 align-middle">
+                <thead class="bg-light">
+                  <tr>
+                    <th class="fw-semibold ps-4">Mwanachama</th>
+                    <th class="fw-semibold">Kiasi Aliomba</th>
+                    <th class="fw-semibold">Aina</th>
+                    <th class="fw-semibold">Tarehe ya Kuomba</th>
+                    <th class="fw-semibold">Alama ya Mkopo</th>
+                    <th class="fw-semibold text-center">Hatua</th>
+                  </tr>
+                </thead>
+                <tbody id="pendingLoansBody">
+                  <tr th:each="l : ${pendingLoansList}">
+                    <td class="fw-semibold ps-4" th:text="${l.member}">Mwanachama</td>
+                    <td th:text="${l.amount}">Kiasi</td>
+                    <td th:text="${l.type}">Aina</td>
+                    <td th:text="${l.date}">Tarehe</td>
+                    <td><span class="badge bg-info" th:text="${l.score}">Score</span></td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-success me-1" title="Idhinisha"><i class="fas fa-check"></i></button>
+                        <button class="btn btn-sm btn-danger" title="Kataa"><i class="fas fa-times"></i></button>
+                    </td>
+                  </tr>
+                  <tr th:if="${#lists.isEmpty(pendingLoansList)}">
+                    <td colspan="6" class="text-center py-5 text-muted">Hakuna maombi yanayosubiri.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Tab 3: Mikopo Hatari -->
+      <div class="tab-pane fade" id="atRiskLoans" role="tabpanel">
+        <div class="card border-0 shadow-sm" data-aos="fade-up">
+          <div class="card-header bg-transparent border-bottom py-3">
+            <h5 class="mb-0 fw-bold text-danger">
+              <i class="fas fa-exclamation-triangle me-2"></i>Mikopo Hatari (Overdue)
+            </h5>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover mb-0 align-middle">
+                <thead class="bg-light">
+                  <tr>
+                    <th class="fw-semibold ps-4">Mwanachama</th>
+                    <th class="fw-semibold">Salio Lililobaki</th>
+                    <th class="fw-semibold">Siku Zimepita</th>
+                    <th class="fw-semibold">Kiwango cha Hatari</th>
+                    <th class="fw-semibold text-center">Hatua</th>
+                  </tr>
+                </thead>
+                <tbody id="atRiskLoansBody">
+                  <tr th:each="l : ${atRiskLoansList}">
+                    <td class="fw-semibold ps-4" th:text="${l.member}">Mwanachama</td>
+                    <td th:text="${l.balance}">Salio</td>
+                    <td th:text="${l.daysOverdue} + ' Siku'">Siku</td>
+                    <td>
+                        <span th:class="'badge ' + (${l.riskLevel == 'High'} ? 'bg-danger' : (${l.riskLevel == 'Medium'} ? 'bg-warning' : 'bg-info'))" 
+                              th:text="${l.riskLevel}">Level</span>
+                    </td>
+                    <td class="text-center"><button class="btn btn-sm btn-outline-primary">Fuatilia</button></td>
+                  </tr>
+                  <tr th:if="${#lists.isEmpty(atRiskLoansList)}">
+                    <td colspan="5" class="text-center py-5 text-muted">Hakuna mikopo hatari.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+    </div>
+<!-- Closing Loans Page Div -->
+  </div>
+  
+      <!-- Savings Page - Final Secure & Professional Admin Version -->
+<div id="savings" class="page">
+    <!-- Page Header -->
+    <div class="mb-5">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h2 class="fw-bold text-dark mb-2">
+            <i class="fas fa-piggy-bank me-3 text-primary"></i>Usimamizi wa Akiba
+          </h2>
+          <p class="text-muted fs-5">Fuatilia, thibitisha na dhibiti akaunti za akiba za wanachama kwa usalama wa hali ya juu</p>
+        </div>
+        <!-- <div class="text-end">
+          <button class="btn btn-warning btn-lg px-5 py-3 shadow-sm rounded-pill" onclick="showPendingDepositsTab()">
+            <i class="fas fa-check-circle me-3 fs-5"></i>
+            Thibitisha Amana Zisizosubiri
+            <span class="badge bg-dark ms-2 fs-5" id="savingsPendingDeposits">18</span>
+          </button>
+        </div> -->
+      </div>
+  
+      <!-- Security Note -->
+      <div class="alert alert-info d-flex align-items-center" role="alert">
+        <i class="fas fa-shield-alt fs-4 me-3"></i>
+        <div>
+          <strong>Usalama:</strong> Amana mpya zinahitaji uthibitisho wa admin kabla ya kuwekwa kwenye akaunti. Riba hulipwa baada ya idhini ya kamati.
+        </div>
+      </div>
+    </div>
+  
+    <!-- KPI Stats Cards - Animated & Secure -->
+    <div class="row g-4 mb-5">
+      <div class="col-md-6 col-lg-3">
+        <div class="stat-card p-4" data-aos="fade-up">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <p class="text-muted small mb-2">Jumla ya Akiba</p>
+              <h3 class="fw-bold text-primary mb-0" th:text="'TZS ' + ${#numbers.formatDecimal(savingsStats['totalSavings'] ?: 0, 1, 'COMMA', 0, 'POINT')}">TZS 0</h3>
+              <small class="text-primary mt-2 d-block" th:text="'+' + (${savingsStats['growthPercentage']} ?: 0) + '% vs mwaka jana'">+0% vs mwaka jana</small>
+            </div>
+            <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+              <i class="fas fa-coins"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+      <div class="col-md-6 col-lg-3">
+        <div class="stat-card p-4" data-aos="fade-up" data-aos-delay="100">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <p class="text-muted small mb-2">Akaunti Zilizotumika</p>
+              <h3 class="fw-bold text-success mb-0" th:text="${#numbers.formatDecimal(savingsStats['activeAccounts'] ?: 0, 0, 'COMMA', 0, 'POINT')}">0</h3>
+              <small class="text-success mt-2 d-block" th:text="(${savingsStats['activeAccountsPercentage']} ?: 0) + '% ya wanachama'">0% ya wanachama</small>
+            </div>
+            <div class="stat-icon bg-success bg-opacity-10 text-success">
+              <i class="fas fa-wallet"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+      <div class="col-md-6 col-lg-3">
+        <div class="stat-card p-4" data-aos="fade-up" data-aos-delay="200">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <p class="text-muted small mb-2">Riba Imelipwa (Mwaka Huu)</p>
+              <h3 class="fw-bold text-info mb-0" th:text="'TZS ' + ${#numbers.formatDecimal(savingsStats['totalInterestPaid'] ?: 0, 1, 'COMMA', 0, 'POINT')}">TZS 0</h3>
+              <small class="text-info mt-2 d-block">Baada ya idhini ya kamati</small>
+            </div>
+            <div class="stat-icon bg-info bg-opacity-10 text-info">
+              <i class="fas fa-gift"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+      <div class="col-md-6 col-lg-3">
+        <div class="stat-card p-4" data-aos="fade-up" data-aos-delay="300">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <p class="text-muted small mb-2">Amana Zisizosubiri Uthibitisho</p>
+              <h3 class="fw-bold text-warning mb-0" th:text="${savingsStats['pendingDepositsCount'] ?: 0}">0</h3>
+              <small class="text-warning mt-2 d-block">Zimepokelewa leo</small>
+            </div>
+            <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+              <i class="fas fa-hourglass-half"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <!--  -->
+    <!-- Search & Filters -->
+    <div class="card border-0 shadow-sm mb-4" data-aos="fade-up">
+      <div class="card-body p-4">
+        <div class="row g-3 align-items-end">
+          <div class="col-lg-5">
+            <label class="form-label fw-semibold text-muted small">Tafuta Mwanachama</label>
+            <input type="text" class="form-control form-control-lg" placeholder="Jina, namba ya uanachama, au simu..." onkeyup="filterSavingsTable()">
+          </div>
+          <div class="col-lg-3">
+            <label class="form-label fw-semibold text-muted small">Hali ya Akaunti</label>
+            <select class="form-select form-select-lg">
+              <option value="">Hali Zote</option>
+              <option>Anatumika</option>
+              <option>Hatumiki</option>
+              <option>Imefungwa</option>
+            </select>
+          </div>
+          <div class="col-lg-2">
+            <label class="form-label fw-semibold text-muted small">Panga Kwa</label>
+            <select class="form-select form-select-lg">
+              <option>Salio Kubwa kwanza</option>
+              <option>Salio Kidogo kwanza</option>
+              <option>Jina (A-Z)</option>
+              <option>Riba Iliyopatikana</option>
+            </select>
+          </div>
+          <div class="col-lg-2">
+            <button class="btn btn-outline-secondary btn-lg w-100">
+              <i class="fas fa-download me-2"></i>Hamisha
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Savings Table -->
+    <div class="card border-0 shadow-sm" data-aos="fade-up" data-aos-delay="100">
+      <div class="card-header bg-transparent border-bottom py-3">
+        <h5 class="mb-0 fw-bold">
+          <i class="fas fa-table me-2 text-primary"></i>Orodha ya Akaunti za Akiba
+          <span class="text-muted ms-3 small">(Inaonyesha 1 - 50 kati ya 1,182)</span>
+        </h5>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0 align-middle">
+            <thead class="bg-light">
+              <tr>
+                <th class="fw-semibold ps-4">Mwanachama</th>
+                <th class="fw-semibold">Salio la Akiba</th>
+                <th class="fw-semibold">Riba Imepatikana (Mwaka)</th>
+                <th class="fw-semibold">Hali</th>
+                <th class="fw-semibold">Tangu</th>
+                <th class="fw-semibold text-center">Hatua</th>
+              </tr>
+            </thead>
+            <tbody id="savingsMembersTableBody">
+              <tr th:each="saving : ${savingsList}">
+                <td class="fw-semibold ps-4" th:text="${saving['memberName'] ?: saving['member'] ?: saving['name']}">Member</td>
+                <td th:text="'TZS ' + ${#numbers.formatDecimal(saving['balance'], 1, 'COMMA', 0, 'POINT')}">Balance</td>
+                <td th:text="'TZS ' + ${#numbers.formatDecimal(saving['interest'], 1, 'COMMA', 0, 'POINT')}">Interest</td>
+                <td><span class="badge" th:classappend="${saving['status'] == 'ACTIVE'} ? 'bg-success' : 'bg-secondary'" th:text="${saving['status']}">Active</span></td>
+                <td th:text="${saving['memberSince'] != null ? #temporals.format(saving['memberSince'], 'MMM yyyy') : '-'}">Since</td>
+                <td class="text-center"><button class="btn btn-sm btn-outline-primary">View</button></td>
+              </tr>
+              <tr th:if="${#lists.isEmpty(savingsList)}">
+                <td colspan="6" class="text-center text-muted py-4">Hakuna akaunti za akiba zilizorekodiwa.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card-footer bg-transparent border-top py-3">
+        <nav aria-label="Ukurasa wa akiba">
+          <ul class="pagination justify-content-center mb-0" id="savingsPagination">
+            <!-- Pagination links zitajazwa na JS -->
+          </ul>
+        </nav>
+      </div>
+    </div>
+<!-- Closing Savings Page Div -->
+  </div>
+  
+  <!-- Shares & Dividends Page -->
+  <div id="shares-dividends" class="page">
+    <div class="mb-5">
+      <h2 class="fw-bold text-dark mb-2"><i class="fas fa-chart-pie me-3 text-primary"></i>Usimamizi wa Hisa na Gawio</h2>
+      <p class="text-muted fs-5">Dhibiti ununuzi wa hisa, uwekezaji na utangazaji wa gawio kwa wanachama</p>
+    </div>
+    <div class="row g-4 mb-5">
+      <div class="col-md-6 col-lg-3">
+        <div class="stat-card p-4">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <p class="text-muted small mb-2">Jumla ya Thamani ya Hisa</p>
+              <h3 class="fw-bold text-primary mb-0" th:text="'TZS ' + ${#numbers.formatDecimal(shareStats['totalSharesValue'] ?: 0, 1, 'COMMA', 0, 'POINT')}">TZS 0</h3>
+              <small class="text-primary" th:text="(${shareStats['shareholdersCount']} ?: 0) + ' wanachama wenye hisa'">0 wanachama wenye hisa</small>
+            </div>
+            <div class="stat-icon bg-primary bg-opacity-10 text-primary"><i class="fas fa-chart-pie"></i></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-3">
+        <div class="stat-card p-4">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <p class="text-muted small mb-2">Gawio Lililotengwa</p>
+              <h3 class="fw-bold text-warning mb-0" th:text="'TZS ' + ${#numbers.formatDecimal(shareStats['dividendPool'] ?: 0, 1, 'COMMA', 0, 'POINT')}">TZS 0</h3>
+              <small class="text-warning" th:text="'Mwaka ' + ${#dates.format(#dates.createNow(), 'yyyy')}">Mwaka 2025</small>
+            </div>
+            <div class="stat-icon bg-warning bg-opacity-10 text-warning"><i class="fas fa-gift"></i></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-transparent border-bottom py-3">
+        <h5 class="mb-0 fw-bold"><i class="fas fa-table me-2 text-primary"></i>Orodha ya Wanachama Wenye Hisa</h5>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0 align-middle">
+            <thead class="bg-light">
+              <tr>
+                <th class="fw-semibold ps-4">Mwanachama</th>
+                <th class="fw-semibold">Idadi ya Hisa</th>
+                <th class="fw-semibold">Thamani (TZS)</th>
+                <th class="fw-semibold">Gawio Iliyopatikana</th>
+                <th class="fw-semibold text-center">Hatua</th>
+              </tr>
+            </thead>
+            <tbody id="sharesTableBody">
+             <tr th:each="sh : ${shareholdersList}">
+               <td class="fw-semibold ps-4" th:text="${sh['memberName'] ?: sh['member'] ?: sh['name']}">John Mwangi</td>
+               <td th:text="${sh['shareCount']}">500</td>
+              <td th:text="'TZS ' + ${#numbers.formatDecimal(sh['shareValue'], 1, 'COMMA', 0, 'POINT')}">TZS 250,000</td>
+               <td th:text="'TZS ' + ${#numbers.formatDecimal(sh['dividendEarned'], 1, 'COMMA', 0, 'POINT')}">TZS 105,000</td>
+               <td class="text-center"><button class="btn btn-sm btn-outline-primary">View</button></td>
+             </tr>
+             <tr th:if="${#lists.isEmpty(shareholdersList)}">
+                <td colspan="5" class="text-center text-muted py-4">Hakuna wanachama wenye hisa waliorikodiwa.</td>
+             </tr>
+           </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+<!-- Closing Shares Page Div -->
+  </div>
+
+  <!-- JavaScript - Safe Actions Only -->
+  <!-- Expenses Page - Full Mobile-First with Working OCR Auto-Fill & Auto-Close -->
+<div id="expenses" class="page">
+    <!-- Page Header -->
+    <div class="mb-5 pb-4">
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-4 mb-4">
+        <div>
+          <h2 class="fw-bold text-dark mb-2 fs-3">
+            <i class="fas fa-receipt me-3 text-primary"></i>Usimamizi wa Matumizi
+          </h2>
+          <p class="text-muted fs-5">Rekodi matumizi au pakia scanned risiti – mfumo utasoma na kujaza data moja kwa moja</p>
+        </div>
+        <div class="text-md-end w-100">
+          <button class="btn btn-primary btn-lg w-100 w-md-auto px-5 py-3 shadow rounded-pill" data-bs-toggle="modal" data-bs-target="#addExpenseChoiceModal">
+            <i class="fas fa-plus me-2 fs-4"></i>
+            <span class="d-none d-sm-inline">Ongeza</span> Matumizi
+          </button>
+        </div>
+      </div>
+  
+      <div class="alert alert-info border-0 rounded-4 p-4">
+        <i class="fas fa-lightbulb fs-4 me-3"></i>
+        <div>
+          <strong>OCR Otomatiki:</strong> Pakia risiti iliyochanganuliwa – mfumo utasoma kiasi, tarehe na maelezo moja kwa moja na kujaza fomu.
+        </div>
+      </div>
+    </div>
+  
+    <!-- KPI Stats Cards -->
+    <div class="row g-4 mb-5">
+      <div class="col-6 col-lg-3">
+        <div class="stat-card p-4 h-100" data-aos="fade-up">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <p class="text-muted small mb-1">Matumizi (Mwezi)</p>
+              <h4 class="fw-bold text-primary mb-0" th:text="'TZS ' + ${#numbers.formatDecimal(expenseStats['totalExpensesThisMonth'] ?: 0, 1, 'COMMA', 0, 'POINT')}">TZS 0</h4>
+            </div>
+            <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+              <i class="fas fa-file-invoice-dollar"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="stat-card p-4 h-100" data-aos="fade-up" data-aos-delay="100">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <p class="text-muted small mb-1">Kikomo cha Malipo</p>
+              <h4 class="fw-bold text-danger mb-0" th:text="'TZS ' + ${#numbers.formatDecimal(expenseStats['expenseLimit'] ?: 0, 1, 'COMMA', 0, 'POINT')}">TZS 50,000</h4>
+            </div>
+            <div class="stat-icon bg-danger bg-opacity-10 text-danger">
+              <i class="fas fa-ban"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="stat-card p-4 h-100" data-aos="fade-up" data-aos-delay="200">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <p class="text-muted small mb-1">Bajeti Iliyobaki</p>
+              <h4 class="fw-bold text-success mb-0" th:text="'TZS ' + ${#numbers.formatDecimal(expenseStats['remainingBudget'] ?: 0, 1, 'COMMA', 0, 'POINT')}">TZS 0</h4>
+            </div>
+            <div class="stat-icon bg-success bg-opacity-10 text-success">
+              <i class="fas fa-wallet"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="stat-card p-4 h-100" data-aos="fade-up" data-aos-delay="300">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <p class="text-muted small mb-1">Inasubiri Idhini</p>
+              <h4 class="fw-bold text-warning mb-0" th:text="${expenseStats['pendingExpensesCount'] ?: 0}">0</h4>
+              <small class="text-warning mt-2 d-block">Zimepokelewa leo</small>
+            </div>
+            <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+              <i class="fas fa-hourglass-half"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Search & Filters -->
+    <div class="card border-0 shadow-sm mb-4" data-aos="fade-up">
+      <div class="card-body p-4">
+        <div class="row g-3">
+          <div class="col-12">
+            <input type="text" class="form-control form-control-lg" placeholder="Tafuta matumizi..." onkeyup="filterExpenses()">
+          </div>
+          <div class="col-12 col-md-4">
+            <select class="form-select form-select-lg">
+              <option>Kategoria Zote</option>
+              <option>Ofisi</option>
+              <option>Mikutano</option>
+              <option>Uendeshaji</option>
+            </select>
+          </div>
+          <div class="col-12 col-md-4">
+            <select class="form-select form-select-lg">
+              <option>Hali Zote</option>
+              <option>Imethibitishwa</option>
+              <option>Inasubiri</option>
+            </select>
+          </div>
+          <div class="col-12 col-md-4">
+            <button class="btn btn-outline-secondary btn-lg w-100">
+              <i class="fas fa-download me-2"></i>Hamisha
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Expenses Table -->
+    <div class="card border-0 shadow-sm" data-aos="fade-up">
+      <div class="card-header bg-transparent border-bottom py-3">
+        <h5 class="mb-0 fw-bold fs-5">
+          <i class="fas fa-list me-2 text-primary"></i>Orodha ya Matumizi Yaliyorekodiwa
+        </h5>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="bg-light">
+              <tr>
+                <th class="ps-3">Tarehe</th>
+                <th>Maelezo</th>
+                <th>Kiasi</th>
+                <th>Hali</th>
+                <th class="text-center">Hatua</th>
+              </tr>
+            </thead>
+            <tbody id="expensesTableBody">
+              <tr th:each="e : ${expensesList}">
+                <td class="ps-3" th:text="${e.date}">Date</td>
+                <td th:text="${e.desc}">Desc</td>
+                <td th:text="${e.amount}">Amount</td>
+                <td><span class="badge bg-success" th:text="${e.status}">Paid</span></td>
+                <td class="text-center"><button class="btn btn-sm btn-outline-primary">View</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Floating Action Button -->
+    <button class="btn btn-primary btn-lg rounded-circle shadow-lg position-fixed bottom-0 end-0 m-4 d-flex align-items-center justify-content-center pulse-animation"
+            style="width: 65px; height: 65px; z-index: 1050;"
+            data-bs-toggle="modal" data-bs-target="#addExpenseChoiceModal">
+      <i class="fas fa-plus fs-3"></i>
+    </button>
+<!-- Closing Expenses Page Div -->
+  </div>
+  
+  <!-- Toast Notification for Success/Failure -->
+  <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100">
+    <div id="ocrToast" class="toast align-items-center text-white border-0" role="alert">
+      <div class="d-flex">
+        <div class="toast-body fw-bold fs-5" id="ocrToastMessage"></div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal ya Chaguo -->
+  <div class="modal fade" id="addExpenseChoiceModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg rounded-4">
+        <div class="modal-header bg-primary text-white rounded-top-4">
+          <h5 class="modal-title fw-bold fs-4">
+            <i class="fas fa-receipt me-3"></i>Chagua Njia ya Kurekodi
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-5 text-center">
+          <div class="row g-4">
+            <div class="col-12">
+              <button class="btn btn-outline-primary btn-lg w-100 py-4 rounded-4 shadow-sm" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#singleExpenseModal">
+                <i class="fas fa-edit fa-3x mb-3"></i>
+                <h5 class="fw-bold mb-0">Rekodi Moja</h5>
+                <small>Jaza fomu na upload risiti</small>
+              </button>
+            </div>
+            <!-- OCR Feature Disabled due to CSP 'unsafe-eval' restriction
+            <div class="col-12">
+              <button class="btn btn-outline-success btn-lg w-100 py-4 rounded-4 shadow-sm" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#ocrUploadModal">
+                <i class="fas fa-scan fa-3x mb-3 text-success"></i>
+                <h5>OCR Scanned Risiti</h5>
+                <small>Mfumo utasoma data moja kwa moja</small>
+              </button>
+            </div>
+            -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal ya Rekodi Moja (na Upload Risiti) -->
+  <div class="modal fade" id="singleExpenseModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content border-0 shadow-lg rounded-4">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title fw-bold">
+            <i class="fas fa-receipt me-3"></i>Rekodi Matumizi Mpya
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4 p-md-5">
+          <form id="singleExpenseForm">
+            <div class="row g-4">
+              <div class="col-12 col-md-6">
+                <label class="form-label fw-semibold">Tarehe <span class="text-danger">*</span></label>
+                <input type="date" class="form-control form-control-lg" required>
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label fw-semibold">Kiasi (TZS) <span class="text-danger">*</span></label>
+                <input type="number" class="form-control form-control-lg" id="singleAmount" max="50000" required>
+                <small class="text-danger">Max: TZS 50,000</small>
+              </div>
+              <div class="col-12">
+                <label class="form-label fw-semibold">Maelezo <span class="text-danger">*</span></label>
+                <textarea class="form-control form-control-lg" rows="3" required></textarea>
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label fw-semibold">Kategoria <span class="text-danger">*</span></label>
+                <select class="form-select form-select-lg" required>
+                  <option value="">Chagua</option>
+                  <option>Ofisi</option>
+                  <option>Mikutano</option>
+                  <option>Uendeshaji</option>
+                  <option>Mengineyo</option>
+                </select>
+              </div>
+              <div class="col-12">
+                <label class="form-label fw-semibold">Pakia Risiti <span class="text-danger">*</span></label>
+                <input type="file" class="form-control form-control-lg" id="singleReceipt" accept=".pdf,.jpg,.jpeg,.png" required>
+                <div id="singlePreview" class="mt-3 d-none text-center">
+                  <img id="singleImgPreview" class="img-fluid rounded shadow" style="max-height: 400px;">
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer border-0 p-4">
+          <button type="button" class="btn btn-outline-secondary btn-lg px-5 w-100 w-md-auto" data-bs-dismiss="modal">Funga</button>
+          <button type="button" class="btn btn-primary btn-lg px-5 w-100 w-md-auto mt-3 mt-md-0" onclick="saveSingleExpense()">
+            <i class="fas fa-save me-2"></i>Hifadhi
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal ya OCR Upload - Working Full Auto-Fill & Auto-Close -->
+  <div class="modal fade" id="ocrUploadModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content border-0 shadow-lg rounded-4">
+        <div class="modal-header bg-success text-white">
+          <h5 class="modal-title fw-bold">
+            <i class="fas fa-scan me-3"></i>Pakia Scanned Risiti au Orodha ya Malipo
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4 p-md-5">
+          <div class="text-center mb-5">
+            <i class="fas fa-file-upload text-success fa-5x mb-4"></i>
+            <h4 class="fw-bold">Bonyeza Kuchagua Risiti Iliyochanganuliwa</h4>
+            <p class="text-muted">Mfumo utasoma data moja kwa moja na kujaza fomu</p>
+          </div>
+  
+          <div class="text-center">
+            <button class="btn btn-success btn-lg px-5 py-4 rounded-4 shadow w-100 w-md-50" onclick="document.getElementById('ocrFileInput').click()">
+              <i class="fas fa-upload fa-2x mb-3"></i>
+              <h5 class="fw-bold mb-0">Chagua Faili ya Risiti</h5>
+              <small>PDF, JPG, PNG • Max 10MB</small>
+            </button>
+            <input type="file" id="ocrFileInput" accept=".pdf,.jpg,.jpeg,.png" class="d-none">
+  
+            <div id="ocrProgress" class="mt-5 d-none">
+              <div class="progress mb-4" style="height: 40px;">
+                <div class="progress-bar progress-bar-striped progress-bar-animated bg-success fs-5" style="width: 0%">0%</div>
+              </div>
+              <p class="fw-bold fs-4" id="ocrStatus">Inachakata risiti yako...</p>
+            </div>
+  
+            <div id="ocrPreview" class="mt-5 d-none text-center">
+              <h5 class="fw-bold mb-3">Muhtasari wa Risiti:</h5>
+              <img id="ocrImgPreview" class="img-fluid rounded shadow mb-4" style="max-height: 500px;">
+              <embed id="ocrPdfPreview" type="application/pdf" width="100%" height="600px" class="rounded shadow d-none">
+            </div>
+  
+            <div id="ocrAutoFillForm" class="mt-5 d-none card border-0 shadow-sm p-4">
+              <h5 class="fw-bold mb-4 text-success">
+                <i class="fas fa-magic me-2"></i>Data Imetolewa Moja kwa Moja kutoka Risiti
+              </h5>
+              <div class="row g-4">
+                <div class="col-12 col-md-6">
+                  <label class="form-label fw-semibold">Tarehe</label>
+                  <input type="date" class="form-control form-control-lg" id="ocrDate">
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label fw-semibold">Kiasi (TZS)</label>
+                  <input type="number" class="form-control form-control-lg" id="ocrAmount">
+                </div>
+                <div class="col-12">
+                  <label class="form-label fw-semibold">Maelezo</label>
+                  <textarea class="form-control form-control-lg" rows="3" id="ocrDescription"></textarea>
+                </div>
+                <div class="col-12">
+                  <label class="form-label fw-semibold">Kategoria (Imependekezwa)</label>
+                  <select class="form-select form-select-lg" id="ocrCategory">
+                    <option>Ofisi na Vifaa</option>
+                    <option>Mikutano</option>
+                    <option>Uendeshaji</option>
+                    <option>Mengineyo</option>
+                  </select>
+                </div>
+              </div>
+              <div class="text-end mt-4">
+                <button class="btn btn-success btn-lg px-5" onclick="saveOCRAutoFilled()">
+                  <i class="fas fa-save me-2"></i>Hifadhi Matumizi
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+
+ 
+  <!-- Meetings Page - Full Mobile-First with Geolocation Attendance -->
+<div id="meetings" class="page">
+  <!-- Page Header -->
+  <div class="mb-5 pb-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-4 mb-4">
+      <div>
+        <h2 class="fw-bold text-dark mb-2 fs-3">
+          <i class="fas fa-calendar-check me-3 text-primary"></i>Usimamizi wa Mikutano
+        </h2>
+        <p class="text-muted fs-5">Panga, fuatilia na rekodi mahudhurio ya mikutano kwa kutumia eneo la GPS (geofencing)</p>
+      </div>
+      <div class="text-md-end w-100">
+        <button class="btn btn-primary btn-lg w-100 w-md-auto px-5 py-3 shadow rounded-pill" data-bs-toggle="modal" data-bs-target="#scheduleMeetingModal">
+          <i class="fas fa-plus me-2 fs-4"></i>
+          <span class="d-none d-sm-inline">Panga</span> Mkutano Mpya
+        </button>
+      </div>
+    </div>
+
+    <!-- Geolocation Info Alert -->
+    <div class="alert alert-success border-0 rounded-4 p-4 d-flex align-items-center">
+      <i class="fas fa-map-marker-alt fs-4 me-3"></i>
+      <div>
+        <strong>Mahudhurio ya GPS:</strong> Wanachama wanaweza kusajili mahudhurio tu wakiwa ndani ya eneo lililowekwa (geofencing). Hii inahakikisha uwepo wa kimwili.
+      </div>
+    </div>
+  </div>
+
+  <!-- KPI Stats Cards -->
+  <div class="row g-4 mb-5">
+    <div class="col-6 col-lg-3">
+      <div class="stat-card p-4 h-100" data-aos="fade-up">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <p class="text-muted small mb-1">Mikutano Inayokuja</p>
+            <h4 class="fw-bold text-primary mb-0" id="upcomingMeetings" th:text="${meetingStats['upcomingMeetingsCount'] ?: 0}">3</h4>
+          </div>
+          <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+            <i class="fas fa-calendar-alt"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <div class="col-6 col-lg-3">
+      <div class="stat-card p-4 h-100" data-aos="fade-up" data-aos-delay="100">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <p class="text-muted small mb-1">Mikutano Iliyopita (Mwezi)</p>
+            <h4 class="fw-bold text-success mb-0" id="pastMeetings" th:text="${meetingStats['pastMeetingsThisMonth'] ?: 0}">8</h4>
+          </div>
+          <div class="stat-icon bg-success bg-opacity-10 text-success">
+            <i class="fas fa-history"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <div class="col-6 col-lg-3">
+      <div class="stat-card p-4 h-100" data-aos="fade-up" data-aos-delay="200">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <p class="text-muted small mb-1">Wastani wa Mahudhurio</p>
+            <h4 class="fw-bold text-info mb-0" id="avgAttendance" th:text="(${meetingStats['averageAttendance']} ?: 0) + '%'">87%</h4>
+          </div>
+          <div class="stat-icon bg-info bg-opacity-10 text-info">
+            <i class="fas fa-users"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="stat-card p-4 h-100" data-aos="fade-up" data-aos-delay="300">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <p class="text-muted small mb-1">Jumla ya Wanachama</p>
+              <h4 class="fw-bold text-warning mb-0" th:text="${meetingStats['totalMembers'] ?: 0}">0</h4>
+          </div>
+          <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+            <i class="fas fa-user-friends"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Meetings Table -->
+  <div class="card border-0 shadow-sm" data-aos="fade-up">
+    <div class="card-header bg-transparent border-bottom py-3">
+      <h5 class="mb-0 fw-bold fs-5">
+        <i class="fas fa-list me-2 text-primary"></i>Orodha ya Mikutano
+      </h5>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="bg-light">
+            <tr>
+              <th class="ps-3">Jina la Mkutano</th>
+              <th>Tarehe & Saa</th>
+              <th>Mahali</th>
+              <th>Waliotarajiwa</th>
+              <th>Mahudhurio</th>
+              <th>Hali</th>
+              <th class="text-center">Hatua</th>
+            </tr>
+          </thead>
+          <tbody id="meetingsPageTableBody">
+            <tr th:each="mt : ${meetingsList}">
+              <td class="ps-3" th:text="${mt.name}">Name</td>
+              <td th:text="${mt.date}">Date & Time</td>
+              <td th:text="${mt.location}">Location</td>
+              <td th:text="${mt.expected}">Expected</td>
+              <td th:text="${mt.attended}">Attended</td>
+              <td><span class="badge bg-info" th:text="${mt.status}">Status</span></td>
+              <td class="text-center"><button class="btn btn-sm btn-outline-primary">View</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating Action Button -->
+  <button class="btn btn-primary btn-lg rounded-circle shadow-lg position-fixed bottom-0 end-0 m-4 d-flex align-items-center justify-content-center pulse-animation"
+          style="width: 65px; height: 65px; z-index: 1050;"
+          data-bs-toggle="modal" data-bs-target="#scheduleMeetingModal">
+    <i class="fas fa-plus fs-3"></i>
+  </button>
+
+  <!-- Toast Notification -->
+  <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100">
+    <div id="meetingsToast" class="toast align-items-center text-white border-0" role="alert">
+      <div class="d-flex">
+        <div class="toast-body fw-bold fs-5" id="meetingsToastMessage"></div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal ya Kupanga Mkutano -->
+  <div class="modal fade" id="scheduleMeetingModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg rounded-4">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title fw-bold"><i class="fas fa-calendar-plus me-2"></i>Panga Mkutano Mpya</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <form id="scheduleMeetingForm">
+            <div class="row g-3">
+              <div class="col-12">
+                <label class="form-label fw-semibold small">Kichwa cha Mkutano</label>
+                <input type="text" class="form-control form-control-sm" id="meetingTitle" required>
+              </div>
+              <div class="col-md-5">
+                <label class="form-label fw-semibold small">Tarehe</label>
+                <input type="date" class="form-control form-control-sm" id="meetingDate" required>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label fw-semibold small">Muda wa Kuanza</label>
+                <input type="time" class="form-control form-control-sm" id="meetingStartTime" required>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label fw-semibold small">Muda wa Kumaliza</label>
+                <input type="time" class="form-control form-control-sm" id="meetingEndTime" required>
+              </div>
+              <div class="col-12">
+                <label class="form-label fw-semibold small">Mahali (Chagua kwenye Ramani)</label>
+                <div id="meetingMap" style="height: 250px;" class="rounded border mb-2"></div>
+                <input type="text" class="form-control form-control-sm" id="meetingLocation" placeholder="Jina la Mahali au Coordinates" required>
+                <input type="hidden" id="meetingLatLng">
+              </div>
+              <div class="col-12">
+                <label class="form-label fw-semibold small">Ajenda / Maelezo</label>
+                <textarea class="form-control form-control-sm" id="meetingAgenda" rows="3"></textarea>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer border-0 p-3">
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Ghairi</button>
+          <button type="button" class="btn btn-primary btn-sm" onclick="saveMeeting()">Hifadhi Mkutano</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<!-- Closing Meetings Page Div -->
+</div>
+
+     <!-- Users Page - Full Final Version with Working Quick Actions -->
+<div id="users" class="page">
+    <!-- Page Header -->
+    <div class="mb-5 pb-4">
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-4 mb-4">
+        <div>
+          <h2 class="fw-bold text-dark mb-2 fs-3">
+            <i class="fas fa-user-tie me-3 text-primary"></i>Usimamizi wa Watumiaji wa Mfumo
+          </h2>
+          <p class="text-muted fs-5">Dhibiti akaunti, majukumu, 2FA na fuatilia shughuli za watumiaji wote</p>
+        </div>
+        <div class="text-md-end w-100">
+          <button class="btn btn-primary btn-lg w-100 w-md-auto px-5 py-3 shadow rounded-pill" data-bs-toggle="modal" data-bs-target="#addUserModal">
+            <i class="fas fa-user-plus me-2 fs-4"></i>
+            <span class="d-none d-sm-inline">Ongeza</span> Mtumiaji Mpya
+          </button>
+        </div>
+      </div>
+  
+      <div class="alert alert-success border-0 rounded-4 p-4 d-flex align-items-center">
+        <i class="fas fa-shield-alt fs-4 me-3"></i>
+        <div>
+          <strong>Usalama wa Mfumo:</strong> Kila login inarekodiwa. 2FA inashauriwa sana kwa watumiaji wote.
+        </div>
+      </div>
+    </div>
+  
+    <!-- KPI Stats Cards -->
+    <div class="row g-4 mb-5">
+      <div class="col-6 col-lg-3">
+        <div class="stat-card p-4 h-100" data-aos="fade-up">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <p class="text-muted small mb-1">Jumla ya Watumiaji</p>
+              <h4 class="fw-bold text-primary mb-0" th:text="${userStats['totalUsers'] ?: 0}">0</h4>
+            </div>
+            <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+              <i class="fas fa-users-cog"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+      <div class="col-6 col-lg-3">
+        <div class="stat-card p-4 h-100" data-aos="fade-up" data-aos-delay="100">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <p class="text-muted small mb-1">Wanaotumika</p>
+              <h4 class="fw-bold text-success mb-0" th:text="${userStats['activeUsers'] ?: 0}">0</h4>
+              <small class="text-success mt-2 d-block" th:text="(${userStats['activePercentage']} ?: 0) + '%'">0%</small>
+            </div>
+            <div class="stat-icon bg-success bg-opacity-10 text-success">
+              <i class="fas fa-user-check"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+      <div class="col-6 col-lg-3">
+        <div class="stat-card p-4 h-100" data-aos="fade-up" data-aos-delay="200">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <p class="text-muted small mb-1">Wapya (Mwezi Huu)</p>
+              <h4 class="fw-bold text-info mb-0" th:text="${userStats['newUsersThisMonth'] ?: 0}">0</h4>
+            </div>
+            <div class="stat-icon bg-info bg-opacity-10 text-info">
+              <i class="fas fa-user-plus"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+      <div class="col-6 col-lg-3">
+        <div class="stat-card p-4 h-100" data-aos="fade-up" data-aos-delay="300">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <p class="text-muted small mb-1">Wasioingia Wiki Hii</p>
+              <h4 class="fw-bold text-warning mb-0" th:text="${userStats['inactiveThisWeek'] ?: 0}">0</h4>
+            </div>
+            <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+              <i class="fas fa-user-clock"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Quick Actions - Fully Functional -->
+    <div class="row g-4 mb-5">
+      <div class="col-md-4">
+        <div class="card border-0 shadow-sm text-center p-5 h-100 hover-lift" data-aos="fade-up">
+          <i class="fas fa-user-plus text-primary fa-4x mb-4"></i>
+          <h5 class="fw-bold mb-3">Ongeza Mtumiaji Mpya</h5>
+          <p class="text-muted small mb-4">Unda akaunti mpya na weka jukumu</p>
+          <button class="btn btn-primary btn-lg w-100 rounded-pill" data-bs-toggle="modal" data-bs-target="#addUserModal">
+            <i class="fas fa-plus me-2"></i>Ongeza Sasa
+          </button>
+        </div>
+      </div>
+  
+      <div class="col-md-4">
+        <div class="card border-0 shadow-sm text-center p-5 h-100 hover-lift" data-aos="fade-up" data-aos-delay="100">
+          <i class="fas fa-history text-info fa-4x mb-4"></i>
+          <h5 class="fw-bold mb-3">Angalia Login Logs</h5>
+          <p class="text-muted small mb-4">Fuatilia wakati, IP na kifaa cha kila login</p>
+          <button class="btn btn-info btn-lg w-100 rounded-pill" data-bs-toggle="modal" data-bs-target="#loginLogsModal">
+            <i class="fas fa-eye me-2"></i>Angalia Logs
+          </button>
+        </div>
+      </div>
+  
+      <div class="col-md-4">
+        <div class="card border-0 shadow-sm text-center p-5 h-100 hover-lift" data-aos="fade-up" data-aos-delay="200">
+          <i class="fas fa-shield-alt text-success fa-4x mb-4"></i>
+          <h5 class="fw-bold mb-3">Dhibiti 2FA</h5>
+          <p class="text-muted small mb-4">Wezesha au lazimisha uthibitisho wa hatua mbili</p>
+          <button class="btn btn-success btn-lg w-100 rounded-pill" data-bs-toggle="modal" data-bs-target="#manage2FAModal">
+            <i class="fas fa-cog me-2"></i>Dhibiti 2FA
+          </button>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Search & Filters -->
+    <div class="card border-0 shadow-sm mb-4" data-aos="fade-up">
+      <div class="card-body p-4">
+        <div class="row g-3">
+          <div class="col-12">
+            <input type="text" class="form-control form-control-lg" placeholder="Tafuta kwa jina, barua pepe au jukumu..." onkeyup="filterUsersTable()">
+          </div>
+          <div class="col-12 col-md-4">
+            <select class="form-select form-select-lg">
+              <option>Jukumu Zote</option>
+              <option>Msimamizi Mkuu</option>
+              <option>Mhazini</option>
+              <option>Afisa Mikopo</option>
+              <option>Mkaguzi</option>
+              <option>Muangalizi</option>
+            </select>
+          </div>
+          <div class="col-12 col-md-4">
+            <select class="form-select form-select-lg">
+              <option>Hali Zote</option>
+              <option>Anatumika</option>
+              <option>Amesimamishwa</option>
+            </select>
+          </div>
+          <div class="col-12 col-md-4">
+            <button class="btn btn-outline-secondary btn-lg w-100">
+              <i class="fas fa-download me-2"></i>Hamisha Orodha
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Users Table -->
+    <div class="card border-0 shadow-sm" data-aos="fade-up">
+      <div class="card-header bg-transparent border-bottom py-3">
+        <h5 class="mb-0 fw-bold fs-5">
+          <i class="fas fa-table me-2 text-primary"></i>Orodha ya Watumiaji wa Mfumo
+          <span class="text-muted ms-3 small">(Jumla: 18)</span>
+        </h5>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0 align-middle">
+            <thead class="bg-light">
+              <tr>
+                <th class="fw-semibold ps-4">Jina</th>
+                <th class="fw-semibold">Barua Pepe</th>
+                <th class="fw-semibold">Jukumu</th>
+                <th class="fw-semibold">2FA</th>
+                <th class="fw-semibold">Hali</th>
+                <th class="fw-semibold">Login ya Mwisho</th>
+                <th class="fw-semibold">Iliyoundwa</th>
+                <th class="fw-semibold text-center">Hatua</th>
+              </tr>
+            </thead>
+            <tbody id="usersTableBody">
+              <tr th:each="u : ${usersList}">
+                <td class="fw-semibold ps-4" th:text="${u.name}">Name</td>
+                <td th:text="${u.email}">Email</td>
+                <td th:text="${u.role}">Role</td>
+                <td th:text="${u.twoFactor}">2FA</td>
+                <td><span class="badge bg-success" th:text="${u.status}">Active</span></td>
+                <td th:text="${u.lastLogin}">Last Login</td>
+                <td>-</td>
+                <td class="text-center"><button class="btn btn-sm btn-outline-primary">Edit</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Floating Action Button -->
+    <button class="btn btn-primary btn-lg rounded-circle shadow-lg position-fixed bottom-0 end-0 m-4 d-flex align-items-center justify-content-center pulse-animation"
+            style="width: 65px; height: 65px; z-index: 1050;"
+            data-bs-toggle="modal" data-bs-target="#addUserModal">
+      <i class="fas fa-user-plus fs-3"></i>
+    </button>
+<!-- Closing Users Page Div -->
+  </div>
+  
+  <!-- Toast Notification -->
+  <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100">
+    <div id="actionToast" class="toast align-items-center text-white border-0" role="alert">
+      <div class="d-flex">
+        <div class="toast-body fw-bold fs-5" id="actionToastMessage"></div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal ya Ongeza Mtumiaji -->
+  <div class="modal fade" id="addUserModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content border-0 shadow-lg rounded-4">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title fw-bold">
+            <i class="fas fa-user-plus me-3"></i>Ongeza Mtumiaji Mpya
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4 p-md-5">
+          <form id="addUserForm">
+            <div class="row g-4">
+              <div class="col-12 col-md-6">
+                <label class="form-label fw-semibold">Jina Kamili <span class="text-danger">*</span></label>
+                <input type="text" class="form-control form-control-lg" required>
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label fw-semibold">Barua Pepe <span class="text-danger">*</span></label>
+                <input type="email" class="form-control form-control-lg" required>
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label fw-semibold">Nenosiri <span class="text-danger">*</span></label>
+                <input type="password" class="form-control form-control-lg" required>
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label fw-semibold">Jukumu <span class="text-danger">*</span></label>
+                <select class="form-select form-select-lg" required>
+                  <option value="">Chagua jukumu</option>
+                  <option>Msimamizi Mkuu</option>
+                  <option>Mhazini</option>
+                  <option>Afisa Mikopo</option>
+                  <option>Mkaguzi</option>
+                  <option>Muangalizi</option>
+                </select>
+              </div>
+              <div class="col-12">
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="newUser2FA">
+                  <label class="form-check-label fw-semibold" for="newUser2FA">
+                    Wezesha 2FA kwa Mtumiaji Huyo (Inapendekezwa)
+                  </label>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer border-0 p-4">
+          <button type="button" class="btn btn-outline-secondary btn-lg px-5 w-100 w-md-auto" data-bs-dismiss="modal">Funga</button>
+          <button type="button" class="btn btn-primary btn-lg px-5 w-100 w-md-auto mt-3 mt-md-0" onclick="saveNewUser()">
+            <i class="fas fa-save me-2"></i>Hifadhi Mtumiaji
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal ya Angalia Login Logs -->
+  <div class="modal fade" id="loginLogsModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content border-0 shadow-lg rounded-4">
+        <div class="modal-header bg-info text-white">
+          <h5 class="modal-title fw-bold">
+            <i class="fas fa-history me-3"></i>Kumbukumbu za Login za Watumiaji
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4">
+          <div class="mb-4">
+            <input type="text" class="form-control form-control-lg" id="loginLogSearch" placeholder="Tafuta kwa jina, IP au tarehe..." onkeyup="filterLoginLogs()">
+          </div>
+          <div class="table-responsive">
+            <table class="table table-hover align-middle">
+              <thead class="bg-light">
+                <tr>
+                  <th>Mtumiaji</th>
+                  <th>Tarehe & Saa</th>
+                  <th>IP Address</th>
+                  <th>Kifaa / Browser</th>
+                  <th>Mahali (Takriban)</th>
+                  <th>Hali</th>
+                </tr>
+              </thead>
+              <tbody id="loginLogsTableBody">
+                <tr>
+                  <td>Amina Juma</td>
+                  <td>29 Des 2025, 14:32</td>
+                  <td>197.250.123.45</td>
+                  <td>Chrome - Windows 11</td>
+                  <td>Dar es Salaam, TZ</td>
+                  <td><span class="badge bg-success">Kufanikiwa</span></td>
+                </tr>
+                <tr>
+                  <td>John Mwangi</td>
+                  <td>29 Des 2025, 10:15</td>
+                  <td>41.78.192.210</td>
+                  <td>Safari - iPhone 14</td>
+                  <td>Arusha, TZ</td>
+                  <td><span class="badge bg-success">Kufanikiwa</span></td>
+                </tr>
+                <tr>
+                  <td>Admin Mkuu</td>
+                  <td>28 Des 2025, 23:58</td>
+                  <td>102.140.56.78</td>
+                  <td>Firefox - Android</td>
+                  <td>Dodoma, TZ</td>
+                  <td><span class="badge bg-danger">Imeshindwa</span></td>
+                </tr>
+                <!-- More demo rows can be added -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="modal-footer border-0 p-4">
+          <button type="button" class="btn btn-outline-secondary btn-lg px-5" data-bs-dismiss="modal">Funga</button>
+          <button type="button" class="btn btn-info btn-lg px-5">
+            <i class="fas fa-download me-2"></i>Hamisha Logs
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal ya Dhibiti 2FA -->
+  <div class="modal fade" id="manage2FAModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content border-0 shadow-lg rounded-4">
+        <div class="modal-header bg-success text-white">
+          <h5 class="modal-title fw-bold">
+            <i class="fas fa-shield-alt me-3"></i>Dhibiti Uthibitisho wa Hatua Mbili (2FA)
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4">
+          <div class="alert alert-info mb-4">
+            <i class="fas fa-info-circle me-2"></i>
+            2FA inahitaji mtumiaji athibitishe login kwa SMS au app. Inazuia ufikiaji usioidhinishwa.
+          </div>
+  
+          <div class="form-check form-switch mb-5">
+            <input class="form-check-input" type="checkbox" id="force2FAForAll">
+            <label class="form-check-label fw-bold fs-4" for="force2FAForAll">
+              Lazimisha 2FA kwa Watumiaji Wote (Inapendekezwa)
+            </label>
+          </div>
+  
+          <h5 class="fw-bold mb-3">Hali ya 2FA kwa Kila Mtumiaji</h5>
+          <div class="table-responsive">
+            <table class="table table-hover align-middle">
+              <thead class="bg-light">
+                <tr>
+                  <th>Mtumiaji</th>
+                  <th>Jukumu</th>
+                  <th>Hali ya 2FA</th>
+                  <th class="text-center">Badilisha</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Admin Mkuu</strong></td>
+                  <td>Msimamizi Mkuu</td>
+                  <td><span class="badge bg-success">Imewezeshwa</span></td>
+                  <td class="text-center">
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" checked onchange="toggle2FA(this)">
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Amina Juma</td>
+                  <td>Mhazini</td>
+                  <td><span class="badge bg-warning">Haijawezeshwa</span></td>
+                  <td class="text-center">
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" onchange="toggle2FA(this)">
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td>John Mwangi</td>
+                  <td>Afisa Mikopo</td>
+                  <td><span class="badge bg-success">Imewezeshwa</span></td>
+                  <td class="text-center">
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" checked onchange="toggle2FA(this)">
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="modal-footer border-0 p-4">
+          <button type="button" class="btn btn-outline-secondary btn-lg px-5" data-bs-dismiss="modal">Funga</button>
+          <button type="button" class="btn btn-success btn-lg px-5" onclick="save2FASettings()">
+            <i class="fas fa-save me-2"></i>Hifadhi Mabadiliko ya 2FA
+          </button>
+        </div>
+      </div>
+    </div>
+<!-- Closing 2FA Modal -->
+  </div>
+  
+ <div id="fines" class="page">
+   <div class="mb-5">
+     <h2 class="fw-bold text-dark mb-2"><i class="fas fa-exclamation-triangle me-3 text-primary"></i>Usimamizi wa Faini</h2>
+     <p class="text-muted fs-5">Dhibiti faini za wanachama, malipo na ripoti</p>
+   </div>
+   <div class="row g-4 mb-5">
+     <div class="col-md-6 col-lg-3">
+       <div class="stat-card p-4">
+         <div class="d-flex justify-content-between align-items-start">
+           <div>
+             <p class="text-muted small mb-2">Jumla ya Faini</p>
+             <h3 class="fw-bold text-danger mb-0" th:text="'TZS ' + ${#numbers.formatDecimal(fineStats['totalFines'] ?: 0, 1, 'COMMA', 0, 'POINT')}">TZS 0</h3>
+             <small class="text-danger" th:text="(${fineStats['totalFinesCount']} ?: 0) + ' faini'">0 faini</small>
+           </div>
+           <div class="stat-icon bg-danger bg-opacity-10 text-danger"><i class="fas fa-exclamation-triangle"></i></div>
+         </div>
+       </div>
+     </div>
+     <div class="col-md-6 col-lg-3">
+       <div class="stat-card p-4">
+         <div class="d-flex justify-content-between align-items-start">
+           <div>
+             <p class="text-muted small mb-2">Faini Zilizolipwa</p>
+             <h3 class="fw-bold text-success mb-0" th:text="'TZS ' + ${#numbers.formatDecimal(fineStats['paidFines'] ?: 0, 1, 'COMMA', 0, 'POINT')}">TZS 0</h3>
+             <small class="text-success" th:text="(${fineStats['paidPercentage']} ?: 0) + '%'">0%</small>
+           </div>
+           <div class="stat-icon bg-success bg-opacity-10 text-success"><i class="fas fa-check-circle"></i></div>
+         </div>
+       </div>
+     </div>
+   </div>
+   <div class="card border-0 shadow-sm">
+     <div class="card-header bg-transparent border-bottom py-3">
+       <h5 class="mb-0 fw-bold"><i class="fas fa-list me-2 text-primary"></i>Orodha ya Faini</h5>
+     </div>
+     <div class="card-body p-0">
+       <div class="table-responsive">
+         <table class="table table-hover mb-0 align-middle">
+           <thead class="bg-light">
+             <tr>
+               <th class="fw-semibold ps-4">Mwanachama</th>
+               <th class="fw-semibold">Kiasi (TZS)</th>
+               <th class="fw-semibold">Sababu</th>
+               <th class="fw-semibold">Tarehe ya Kufanyika</th>
+               <th class="fw-semibold">Hali</th>
+               <th class="fw-semibold text-center">Hatua</th>
+             </tr>
+           </thead>
+           <tbody id="finesTableBody" >
+            <tr th:each="fine : ${finesList}">
+              <td class="fw-semibold ps-4" th:text="${fine['memberName'] ?: fine['member'] ?: fine['name']}">Amina Juma</td>
+              <td th:text="'TZS ' + ${#numbers.formatDecimal(fine['amount'], 1, 'COMMA', 0, 'POINT')}">TZS 50,000</td>
+              <td th:text="${fine['reason']}">Kulipia baada ya muda</td>
+              <td th:text="${#temporals.format(fine['date'], 'yyyy-MM-dd')}">2025-12-15</td>
+              <td>
+                <span th:classappend="${fine['status'] == 'PAID'} ? 'bg-success' : 'bg-warning'" class="badge" th:text="${fine['status'] == 'PAID'} ? 'Imelipwa' : 'Inasubiri Malipo'">
+                  Inasubiri Malipo
+                </span>
+              </td>
+              <td class="text-center"><button class="btn btn-sm btn-outline-primary">View</button></td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(finesList)}">
+              <td colspan="6" class="text-center text-muted py-4">Hakuna faini zilizorekodiwa.</td>
+            </tr>
+            </tbody>
+         </table>
+       </div>
+     </div>
+   </div>
+<!-- Closing Fines Page Div -->
+ </div>
+ 
+ <div id="notifications" class="page">
+   <div class="mb-5">
+     <h2 class="fw-bold text-dark mb-2"><i class="fas fa-bell me-3 text-primary"></i>Usimamizi wa Arifa</h2>
+     <p class="text-muted fs-5">Tuma, fuatilia na dhibiti arifa kwa wanachama</p>
+   </div>
+   <div class="card border-0 shadow-sm mb-5">
+     <div class="card-header bg-transparent border-bottom py-3">
+       <h5 class="mb-0 fw-bold"><i class="fas fa-list me-2 text-primary"></i>Orodha ya Arifa</h5>
+     </div>
+     <div class="card-body p-0">
+       <div class="table-responsive">
+         <table class="table table-hover mb-0 align-middle">
+           <thead class="bg-light">
+             <tr>
+               <th class="fw-semibold ps-4">Mwavuzi</th>
+               <th class="fw-semibold">Mwake</th>
+               <th class="fw-semibold">Uhuru</th>
+               <th class="fw-semibold">Hali</th>
+               <th class="fw-semibold text-center">Hatua</th>
+             </tr>
+           </thead>
+           <tbody id="notificationsTableBody" >
+            <tr th:each="notif : ${notificationsList}">
+              <td class="fw-semibold ps-4" th:text="${notif.title}">Mkutano Mkuu</td>
+              <td th:text="${#temporals.format(notif.date, 'yyyy-MM-dd')}">2025-12-25</td>
+              <td th:text="${notif.message}">Mkutano Mkuu wa Mwaka</td>
+              <td><span class="badge bg-info" th:text="${notif.status}">Imewasilishwa</span></td>
+              <td class="text-center"><button class="btn btn-sm btn-outline-primary">View</button></td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(notificationsList)}">
+              <td colspan="5" class="text-center text-muted py-4">Hakuna arifa zilizotumwa.</td>
+            </tr>
+            </tbody>
+         </table>
+       </div>
+     </div>
+   </div>
+<!-- Closing Notifications Page Div -->
+ </div>
+ 
+ <div id="audit-logs" class="page">
+   <div class="mb-5">
+     <h2 class="fw-bold text-dark mb-2"><i class="fas fa-history me-3 text-primary"></i>Audit Logs</h2>
+     <p class="text-muted fs-5">Angalia kumbukumbu za mfumo na matumizi ya watumiaji</p>
+   </div>
+   <div class="card border-0 shadow-sm">
+     <div class="card-header bg-transparent border-bottom py-3">
+       <h5 class="mb-0 fw-bold"><i class="fas fa-list me-2 text-primary"></i>Orodha ya Audit Logs</h5>
+     </div>
+     <div class="card-body p-0">
+       <div class="table-responsive">
+         <table class="table table-hover mb-0 align-middle">
+           <thead class="bg-light">
+             <tr>
+               <th class="fw-semibold ps-4">Mtumiaji</th>
+               <th class="fw-semibold">Shughuli</th>
+               <th class="fw-semibold">Tarehe & Saa</th>
+               <th class="fw-semibold">IP Address</th>
+               <th class="fw-semibold text-center">Hatua</th>
+             </tr>
+           </thead>
+           <tbody id="auditLogsTableBody">
+            <tr th:each="log : ${auditLogsList}">
+              <td class="fw-semibold ps-4" th:text="${log.user}">Admin Mkuu</td>
+              <td th:text="${log.action}">Kurekodi Amana</td>
+              <td th:text="${#temporals.format(log.timestamp, 'yyyy-MM-dd, HH:mm')}">2025-12-29, 14:32</td>
+              <td th:text="${log.ipAddress}">197.250.123.45</td>
+              <td class="text-center"><button class="btn btn-sm btn-outline-primary">View</button></td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(auditLogsList)}">
+              <td colspan="5" class="text-center text-muted py-4">Hakuna kumbukumbu za mfumo.</td>
+            </tr>
+            </tbody>
+         </table>
+       </div>
+     </div>
+   </div>
+<!-- Closing Audit Logs Page Div -->
+ </div>
+ 
+ <div id="settings" class="page">
+   <div class="mb-5">
+     <h2 class="fw-bold text-dark mb-2"><i class="fas fa-cog me-3 text-primary"></i>Mipangilio</h2>
+     <p class="text-muted fs-5">Badilisha mipangilio ya mfumo na utendaji</p>
+   </div>
+   <div class="row g-4">
+     <div class="col-md-6">
+       <div class="card border-0 shadow-sm">
+         <div class="card-header bg-transparent border-bottom py-3">
+           <h5 class="mb-0 fw-bold"><i class="fas fa-cog me-2 text-primary"></i>Mipangilio ya Mfumo</h5>
+         </div>
+         <div class="card-body">
+           <form>
+             <div class="mb-3">
+               <label class="form-label fw-semibold">Kiasi cha Hisa cha Kawaida</label>
+               <input type="number" class="form-control" th:value="${settings['defaultShareAmount'] ?: 50000}" min="10000">
+             </div>
+             <div class="mb-3">
+               <label class="form-label fw-semibold">Kikomo cha Matumizi</label>
+               <input type="number" class="form-control" th:value="${settings['expenseLimit'] ?: 50000}" min="1000">
+             </div>
+             <button type="submit" class="btn btn-primary">Hifadhi Mipangilio</button>
+           </form>
+         </div>
+       </div>
+     </div>
+     <div class="col-md-6">
+       <div class="card border-0 shadow-sm">
+         <div class="card-header bg-transparent border-bottom py-3">
+           <h5 class="mb-0 fw-bold"><i class="fas fa-palette me-2 text-primary"></i>Mwendo wa Mfumo</h5>
+         </div>
+         <div class="card-body">
+           <div class="mb-3">
+             <label class="form-label fw-semibold">Ncha ya Mwendo</label>
+             <select class="form-select" id="languageSetting">
+               <option value="sw" th:selected="${settings['language'] == 'sw'}">Kiswahili</option>
+               <option value="en" th:selected="${settings['language'] == 'en'}">English</option>
+             </select>
+           </div>
+           <div class="mb-3">
+             <label class="form-label fw-semibold">Mwendo wa Saa</label>
+             <select class="form-select" id="timezoneSetting">
+               <option value="Africa/Dar_es_Salaam" th:selected="${settings['timezone'] == 'Africa/Dar_es_Salaam'}">Dar es Salaam</option>
+               <option value="Africa/Nairobi" th:selected="${settings['timezone'] == 'Africa/Nairobi'}">Nairobi</option>
+             </select>
+           </div>
+         </div>
+       </div>
+     </div>
+   </div>
+<!-- Closing Settings Page Div -->
+ </div>
+ 
+      <!-- Reports Page - Full Working Version with Functional Buttons & Charts -->
+<div id="reports" class="page">
+    <!-- Page Header -->
+    <div class="mb-5 pb-4">
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-4 mb-4">
+        <div>
+          <h2 class="fw-bold text-dark mb-2 fs-3">
+            <i class="fas fa-chart-bar me-3 text-primary"></i>Ripoti na Uchambuzi wa Data
+          </h2>
+          <p class="text-muted fs-5">Tengeneza na angalia ripoti zote za AkibaPlus SACCOS kwa urahisi na usahihi</p>
+        </div>
+        <div class="text-md-end w-100">
+          <button class="btn btn-success btn-lg w-100 w-md-auto px-5 py-3 shadow rounded-pill" data-bs-toggle="modal" data-bs-target="#customReportModal">
+            <i class="fas fa-file-pdf me-2 fs-4"></i>
+            <span class="d-none d-sm-inline">Tengeneza</span> Ripoti Mpya
+          </button>
+        </div>
+      </div>
+  
+      <div class="alert alert-info border-0 rounded-4 p-4 d-flex align-items-center">
+        <i class="fas fa-chart-line fs-4 me-3"></i>
+        <div>
+          <strong>Uchambuzi wa Moja kwa Moja:</strong> Charts zinasasishwa kiotomatiki. Bonyeza button yoyote ili kutengeneza ripoti.
+        </div>
+      </div>
+    </div>
+  
+    <!-- KPI Stats Cards -->
+    <div class="row g-4 mb-5">
+      <div class="col-6 col-lg-4">
+        <div class="stat-card p-4 h-100" data-aos="fade-up">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <p class="text-muted small mb-1">Jumla ya Wanachama</p>
+              <h4 class="fw-bold text-primary mb-0" th:text="${reportStats['totalMembers'] ?: 0}">0</h4>
+              <small class="text-success mt-2 d-block" th:text="'+' + (${reportStats['newMembersThisMonth']} ?: 0) + ' mwezi huu'">+0 mwezi huu</small>
+            </div>
+            <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+              <i class="fas fa-users"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+      <div class="col-6 col-lg-4">
+        <div class="stat-card p-4 h-100" data-aos="fade-up" data-aos-delay="100">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <p class="text-muted small mb-1">Jumla ya Akiba</p>
+              <h4 class="fw-bold text-success mb-0" th:text="'TZS ' + ${#numbers.formatDecimal(reportStats['totalSavings'] ?: 0, 1, 'COMMA', 0, 'POINT')}">TZS 0</h4>
+              <small class="text-success mt-2 d-block" th:text="'+' + (${reportStats['savingsGrowthYoY']} ?: 0) + '% YoY'">+0% YoY</small>
+            </div>
+            <div class="stat-icon bg-success bg-opacity-10 text-success">
+              <i class="fas fa-piggy-bank"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+      <div class="col-6 col-lg-4">
+        <div class="stat-card p-4 h-100" data-aos="fade-up" data-aos-delay="200">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <p class="text-muted small mb-1">Mikopo Inayotumika</p>
+              <h4 class="fw-bold text-info mb-0" th:text="'TZS ' + ${#numbers.formatDecimal(reportStats['activeLoansValue'] ?: 0, 1, 'COMMA', 0, 'POINT')}">TZS 0</h4>
+              <small class="text-info mt-2 d-block" th:text="(${reportStats['activeLoansCount']} ?: 0) + ' mikopo'">0 mikopo</small>
+            </div>
+            <div class="stat-icon bg-info bg-opacity-10 text-info">
+              <i class="fas fa-file-invoice-dollar"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+      <div class="col-6 col-lg-4">
+        <div class="stat-card p-4 h-100" data-aos="fade-up" data-aos-delay="300">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <p class="text-muted small mb-1">Jumla ya Hisa</p>
+              <h4 class="fw-bold text-warning mb-0" th:text="'TZS ' + ${#numbers.formatDecimal(reportStats['totalSharesValue'] ?: 0, 1, 'COMMA', 0, 'POINT')}">TZS 0</h4>
+              <small class="text-warning mt-2 d-block" th:text="(${reportStats['shareholdersCount']} ?: 0) + ' wenye hisa'">0 wenye hisa</small>
+            </div>
+            <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+              <i class="fas fa-chart-pie"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+      <div class="col-6 col-lg-4">
+        <div class="stat-card p-4 h-100" data-aos="fade-up" data-aos-delay="400">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <p class="text-muted small mb-1">Gawio Lililotengwa</p>
+              <h4 class="fw-bold text-purple mb-0" th:text="'TZS ' + ${#numbers.formatDecimal(reportStats['dividendPool'] ?: 0, 1, 'COMMA', 0, 'POINT')}">TZS 0</h4>
+              <small class="text-purple mt-2 d-block" th:text="'Mwaka ' + ${#temporals.format(#temporals.createNow(), 'yyyy')}">Mwaka 2025</small>
+            </div>
+            <div class="stat-icon bg-purple bg-opacity-10 text-purple">
+              <i class="fas fa-gift"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+      <div class="col-6 col-lg-4">
+        <div class="stat-card p-4 h-100" data-aos="fade-up" data-aos-delay="500">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <p class="text-muted small mb-1">Ubora wa Kundi la Mikopo</p>
+              <h4 class="fw-bold text-success mb-0" th:text="${100 - (reportStats['nplRatio'] ?: 0)} + '%'">0%</h4>
+              <small class="text-success mt-2 d-block" th:text="'NPL: ' + (${reportStats['nplRatio']} ?: 0) + '%'">NPL: 0%</small>
+            </div>
+            <div class="stat-icon bg-success bg-opacity-10 text-success">
+              <i class="fas fa-trophy"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Financial Summary Table (New Feature) -->
+    <div class="card border-0 shadow-sm rounded-4 mb-5" data-aos="fade-up">
+      <div class="card-header bg-transparent border-0 py-4">
+        <h5 class="fw-bold mb-0"><i class="fas fa-table me-2 text-dark"></i>Muhtasari wa Kifedha (Financial Summary)</h5>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0 align-middle">
+            <thead class="bg-light">
+              <tr>
+                <th class="ps-4">Kipengele</th>
+                <th>Thamani (TZS)</th>
+                <th>Idadi / Maelezo</th>
+                <th>Hali</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="ps-4 fw-semibold">Jumla ya Akiba</td>
+                <td class="text-success fw-bold" th:text="${totalSavings}">TZS 0</td>
+                <td th:text="${activeAccountsRate}">0%</td>
+                <td><span class="badge bg-success">Inakua</span></td>
+              </tr>
+              <tr>
+                <td class="ps-4 fw-semibold">Jumla ya Mikopo</td>
+                <td class="text-primary fw-bold" th:text="${totalLoanPortfolio}">TZS 0</td>
+                <td th:text="${activeLoansCount} + ' Mikopo'">0</td>
+                <td><span class="badge bg-primary">Active</span></td>
+              </tr>
+              <tr>
+                <td class="ps-4 fw-semibold">Jumla ya Hisa</td>
+                <td class="text-warning fw-bold" th:text="${totalShares}">TZS 0</td>
+                <td th:text="${shareholdersCount} + ' Wanachama'">0</td>
+                <td><span class="badge bg-warning">Stable</span></td>
+              </tr>
+              <tr>
+                <td class="ps-4 fw-semibold">Gawio Lililotengwa</td>
+                <td class="text-purple fw-bold" th:text="'TZS ' + ${#numbers.formatDecimal(dividendPool, 1, 'COMMA', 0, 'POINT')}">TZS 0</td>
+                <td th:text="${dividendPercentage}">0%</td>
+                <td><span class="badge bg-info">Pending</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Charts Section - Now Fully Working -->
+    <div class="row g-4">
+      <div class="col-lg-8">
+        <div class="card border-0 shadow-sm rounded-4" data-aos="fade-up">
+          <div class="card-header bg-transparent border-0 py-4">
+            <h5 class="fw-bold mb-0">
+              <i class="fas fa-chart-line me-2 text-primary"></i>Ukuaji wa Akiba na Mikopo (2021 - 2025)
+            </h5>
+          </div>
+          <div class="card-body p-4">
+            <canvas id="repGrowthChart" height="300"></canvas>
+          </div>
+        </div>
+      </div>
+  
+      <div class="col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4" data-aos="fade-up" data-aos-delay="100">
+          <div class="card-header bg-transparent border-0 py-4">
+            <h5 class="fw-bold mb-0">
+              <i class="fas fa-chart-pie me-2 text-success"></i>Mgao wa Mali
+            </h5>
+          </div>
+          <div class="card-body p-4 text-center">
+            <canvas id="repPortfolioChart" height="300"></canvas>
+          </div>
+        </div>
+      </div>
+  
+      <div class="col-lg-12">
+        <div class="card border-0 shadow-sm rounded-4" data-aos="fade-up" data-aos-delay="200">
+          <div class="card-header bg-transparent border-0 py-4">
+            <h5 class="fw-bold mb-0">
+              <i class="fas fa-chart-bar me-2 text-info"></i>Matumizi kwa Kategoria (Mwezi Huu)
+            </h5>
+          </div>
+          <div class="card-body p-4">
+            <canvas id="repExpensesChart" height="200"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Floating Action Button -->
+    <button class="btn btn-success btn-lg rounded-circle shadow-lg position-fixed bottom-0 end-0 m-4 d-flex align-items-center justify-content-center pulse-animation"
+            style="width: 65px; height: 65px; z-index: 1050;"
+            data-bs-toggle="modal" data-bs-target="#customReportModal">
+      <i class="fas fa-file-pdf fs-3"></i>
+    </button>
+<!-- Closing Reports Page Div -->
+  </div>
+  
+  <!-- Modal ya Kutengeneza Ripoti Mpya -->
+  <div class="modal fade" id="customReportModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg rounded-4">
+        <div class="modal-header bg-success text-white">
+          <h5 class="modal-title fw-bold">
+            <i class="fas fa-file-pdf me-3"></i>Tengeneza Ripoti Mpya
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-5">
+          <div class="row g-4">
+            <div class="col-12">
+              <label class="form-label fw-semibold">Chagua Aina ya Ripoti</label>
+              <select class="form-select form-select-lg">
+                <option>Ripoti ya Wanachama</option>
+                <option>Ripoti ya Mikopo</option>
+                <option>Ripoti ya Akiba na Hisa</option>
+                <option>Ripoti ya Matumizi na Gawio</option>
+                <option>Ripoti ya Jumla (Full Financial)</option>
+              </select>
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label fw-semibold">Kutoka Tarehe</label>
+              <input type="date" class="form-control form-control-lg" value="2025-01-01">
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label fw-semibold">Hadi Tarehe</label>
+              <input type="date" class="form-control form-control-lg" value="2025-12-29">
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold">Muundo wa Ripoti</label>
+              <select class="form-select form-select-lg">
+                <option>PDF (Inayopendekezwa)</option>
+                <option>Excel (XLSX)</option>
+                <option>Word (DOCX)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-0 p-4">
+          <button type="button" class="btn btn-outline-secondary btn-lg px-5" data-bs-dismiss="modal">Funga</button>
+          <button type="button" class="btn btn-success btn-lg px-5" onclick="downloadCustomReport()">
+            <i class="fas fa-download me-2"></i>Hamisha Ripoti
+          </button>
+        </div>
+      </div>
+    </div>
+<!-- Closing OCR Modal -->
+  </div>
+  
+  <!-- Toast Notification -->
+  <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100">
+    <div id="reportToast" class="toast align-items-center text-white border-0" role="alert">
+      <div class="d-flex">
+        <div class="toast-body fw-bold fs-5" id="reportToastMessage"></div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- JavaScript - Full Working Charts & Buttons -->
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script th:inline="javascript">
+    /*<![CDATA[*/
+    window.akibaData = {
+      chartYears: /*[[${chartYears}]]*/ [],
+      chartSavingsTrend: /*[[${chartSavingsTrend}]]*/ [],
+      chartSavings: /*[[${chartSavings}]]*/ [],
+      chartLoans: /*[[${chartLoans}]]*/ [],
+      chartShares: /*[[${chartShares}]]*/ [],
+      expenseChartLabels: /*[[${expenseChartLabels}]]*/ [],
+      expenseChartData: /*[[${expenseChartData}]]*/ []
+    };
+    /*]]>*/
+  </script>
+</body> 
+</html>
