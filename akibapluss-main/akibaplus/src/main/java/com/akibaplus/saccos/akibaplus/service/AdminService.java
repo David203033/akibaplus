@@ -37,24 +37,32 @@ public class AdminService {
         transaction.setMember(member);
         transaction.setType(req.getType());
         transaction.setDescription(req.getDescription());
-        transaction.setAmount(req.getAmount());
         transaction.setDate(LocalDate.now());
         transaction.setStatus("POSTED");
 
         BigDecimal current = member.getSavingsBalance() != null ? member.getSavingsBalance() : BigDecimal.ZERO;
         BigDecimal newBalance = current;
+        BigDecimal amountToStore = req.getAmount();
+
         if ("CREDIT".equalsIgnoreCase(req.getType()) || "AMANA".equalsIgnoreCase(req.getType()) || "DEPOSIT".equalsIgnoreCase(req.getType())) {
             newBalance = current.add(req.getAmount());
         } else if ("DEBIT".equalsIgnoreCase(req.getType()) || "WITHDRAWAL".equalsIgnoreCase(req.getType()) || "TOZO".equalsIgnoreCase(req.getType()) || "FAINI".equalsIgnoreCase(req.getType())) {
             newBalance = current.subtract(req.getAmount());
+            if (amountToStore.compareTo(BigDecimal.ZERO) > 0) amountToStore = amountToStore.negate();
         }
         
+
         // Update Shares Value if transaction is for Shares
         if ("HISA".equalsIgnoreCase(req.getType()) || "SHARES".equalsIgnoreCase(req.getType())) {
+            // A share purchase must debit the savings account.
+            newBalance = current.subtract(req.getAmount());
+            if (amountToStore.compareTo(BigDecimal.ZERO) > 0) amountToStore = amountToStore.negate();
+
             BigDecimal currentShares = member.getSharesValue() != null ? member.getSharesValue() : BigDecimal.ZERO;
             member.setSharesValue(currentShares.add(req.getAmount()));
         }
 
+        transaction.setAmount(amountToStore);
         transaction.setBalance(newBalance);
 
         Transaction saved = transactionRepository.save(transaction);

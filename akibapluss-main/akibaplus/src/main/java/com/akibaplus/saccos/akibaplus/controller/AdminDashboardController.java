@@ -373,7 +373,7 @@ public class AdminDashboardController {
 
         // --- 9. Fine Stats ---
         Map<String, Object> fineStats = new HashMap<>();
-        List<Transaction> fines = allTransactions.stream().filter(t -> "FINE".equalsIgnoreCase(t.getType()) || "TOZO".equalsIgnoreCase(t.getType())).collect(Collectors.toList());
+        List<Transaction> fines = allTransactions.stream().filter(t -> "FINE".equalsIgnoreCase(t.getType()) || "FAINI".equalsIgnoreCase(t.getType())).collect(Collectors.toList());
         BigDecimal totalFines = fines.stream().map(Transaction::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
         fineStats.put("totalFines", totalFines);
         fineStats.put("totalFinesCount", fines.size());

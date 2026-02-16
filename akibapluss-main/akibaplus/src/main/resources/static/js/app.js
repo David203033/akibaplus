@@ -27,6 +27,8 @@ function loadPage(pageId) {
     // Initialize charts if on dashboard
     if (pageId === 'dashboard') {
       initializeDashboardCharts();
+    } else if (pageId === 'analytics') {
+      initializeAnalyticsCharts();
     }
     
     // Save state
@@ -34,25 +36,40 @@ function loadPage(pageId) {
   }
 }
 
+// Toast Helper (Fallback to alert for now)
+function showToast(message, type = 'success') {
+  alert(message);
+}
+
 // ====================
 // Chart Initialization
 // ====================
 function initializeDashboardCharts() {
-  initSavingsChart();
-  initDistributionChart();
+  fetch('/api/member/analytics')
+    .then(res => res.json())
+    .then(data => {
+      initSavingsChart(data);
+      initDistributionChart(data);
+    })
+    .catch(err => console.error('Failed to load dashboard data', err));
 }
 
-function initSavingsChart() {
+function initSavingsChart(data) {
   const ctx = document.getElementById('savingsChart');
-  if (!ctx || ctx.savingsChartInstance) return;
+  if (!ctx) return;
+
+  if (ctx.savingsChartInstance) {
+    ctx.savingsChartInstance.destroy();
+    ctx.savingsChartInstance = null;
+  }
 
   ctx.savingsChartInstance = new Chart(ctx, {
     type: 'line',
     data: {
-      labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+      labels: data.months || [],
       datasets: [{
         label: 'Salio la Akiba (TZS)',
-        data: [5000000, 5500000, 6000000, 6500000, 7000000, 7200000, 7500000, 7800000, 8000000, 8200000, 8300000, 8500000],
+        data: data.savingsTrend || [],
         borderColor: '#2563eb',
         backgroundColor: 'rgba(37, 99, 235, 0.1)',
         borderWidth: 3,
@@ -88,16 +105,21 @@ function initSavingsChart() {
   });
 }
 
-function initDistributionChart() {
+function initDistributionChart(data) {
   const ctx = document.getElementById('distributionChart');
-  if (!ctx || ctx.distributionChartInstance) return;
+  if (!ctx) return;
+
+  if (ctx.distributionChartInstance) {
+    ctx.distributionChartInstance.destroy();
+    ctx.distributionChartInstance = null;
+  }
 
   ctx.distributionChartInstance = new Chart(ctx, {
     type: 'doughnut',
     data: {
       labels: ['Akiba', 'Hisa', 'Mikopo'],
       datasets: [{
-        data: [8500000, 4200000, 1200000],
+        data: [data.currentSavings || 0, data.currentShares || 0, data.currentLoans || 0],
         backgroundColor: [
           '#2563eb',
           '#10b981',
@@ -197,10 +219,12 @@ function setMobileNumber(number, provider) {
   console.log('Selected ' + provider + ': ' + number);
 }
 
-function simulatePayment() {
-  alert('Malipo yamekubaliwa! Utapokea kupilikia SMS ndani ya dakika 2.');
-  // Hide payment form and show success message
-  document.querySelector('.card-body').innerHTML = '<div class="alert alert-success text-center"><i class="fas fa-check-circle fa-4x mb-3"></i><h4 class="fw-bold mt-3">Malipo Yamefanyika Kwa Mafanikio!</h4><p>Tunakushukuru kwa kulipa mkopo wako haraka.</p></div>';
+function submitWithdraw() {
+  const amount = document.getElementById('withdrawAmount').value;
+  if(!amount || amount < 1000) { alert('Weka kiasi halali.'); return; }
+  fetch('/api/savings/withdraw', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ amount }) })
+  .then(res => res.json())
+  .then(data => { alert(data.message); if(data.success) window.location.reload(); });
 }
 
 // Loan Application Multi-Step Form
@@ -282,10 +306,34 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function submitLoanApplication() {
-  alert('Ombi lako limewasilishwa! Utapokea jibu ndani ya siku 3-7 za kazi.');
-  console.log('Loan application submitted');
-  // Here you would send the form data to the backend
-  // fetch('/api/loans/apply', { method: 'POST', body: formData });
+  const btn = document.getElementById('submitBtn');
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Inawasilisha...';
+  btn.disabled = true;
+  
+  const loanData = {
+    type: document.getElementById('loanType').value,
+    amount: document.getElementById('loanAmount').value,
+    duration: parseInt(document.getElementById('loanDuration').value),
+    reason: document.getElementById('loanReason').value,
+  };
+
+  const fd = new FormData();
+  fd.append('type', loanData.type);
+  fd.append('amount', loanData.amount);
+  fd.append('duration', loanData.duration);
+  fd.append('reason', loanData.reason);
+
+  fetch('/api/loans/apply', {
+    method: 'POST',
+    body: fd
+  })
+  .then(response => response.json())
+  .then(data => {
+    alert(data.message);
+    if (data.success) window.location.reload();
+  })
+  .catch(error => { console.error(error); alert('Imeshindwa kuwasilisha ombi.'); })
+  .finally(() => { btn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Wasilisha Ombi Sasa'; btn.disabled = false; });
 }
 
 // ====================
@@ -298,8 +346,7 @@ function preparePayment(amount, description) {
 }
 
 function confirmPenaltyPayment() {
-  alert('Malipo yamekubaliwa! Asante.');
-  bootstrap.Modal.getInstance(document.getElementById('payPenaltyModal')).hide();
+  fetch('/api/penalties/pay', { method: 'POST' }).then(res => res.json()).then(data => { alert(data.message); if(data.success) window.location.reload(); });
 }
 
 // ====================
@@ -390,10 +437,7 @@ function filterStatements(period) {
 }
 
 function downloadStatement(format, period) {
-  alert(`Taarifa ya ${period} (${format}) inapakuliwa...`);
-  console.log('Downloading: ' + period + ' in ' + format);
-  // Here you would trigger actual download
-  // window.location.href = `/api/statements/download?format=${format}&period=${period}`;
+  alert(`Inapakua taarifa: ${period} (${format})...`);
 }
 
 // ====================
@@ -401,27 +445,32 @@ function downloadStatement(format, period) {
 // ====================
 
 function initializeAnalyticsCharts() {
-  initSavingsSharesGrowthChart();
-  initIncomeExpenseChart();
-  initLoanRepaymentChart();
-  initMonthlyContributionsChart();
-  initInterestDividendsChart();
-  initLoansPaidChart();
-  initAssetAllocationChart();
+  fetch('/api/member/analytics')
+    .then(res => res.json())
+    .then(data => {
+      initSavingsSharesGrowthChart(data);
+      initIncomeExpenseChart(data);
+      initLoanRepaymentChart(data);
+      initMonthlyContributionsChart(data);
+      initInterestDividendsChart(data);
+      initLoansPaidChart(data);
+      initAssetAllocationChart(data);
+    })
+    .catch(err => console.error('Failed to load analytics data', err));
 }
 
-function initSavingsSharesGrowthChart() {
+function initSavingsSharesGrowthChart(data) {
   const ctx = document.getElementById('savingsSharesGrowthChart');
   if (!ctx) return;
 
   new Chart(ctx, {
     type: 'line',
     data: {
-      labels: ['2019', '2020', '2021', '2022', '2023', '2024', '2025'],
+      labels: data.months,
       datasets: [
         {
           label: 'Akiba',
-          data: [1000000, 2000000, 3500000, 5000000, 6500000, 7500000, 8500000],
+          data: data.savingsTrend,
           borderColor: '#2563eb',
           backgroundColor: 'rgba(37, 99, 235, 0.1)',
           borderWidth: 3,
@@ -430,7 +479,7 @@ function initSavingsSharesGrowthChart() {
         },
         {
           label: 'Hisa',
-          data: [500000, 1000000, 1800000, 2500000, 3200000, 3800000, 4200000],
+          data: data.sharesTrend,
           borderColor: '#10b981',
           backgroundColor: 'rgba(16, 185, 129, 0.1)',
           borderWidth: 3,
@@ -458,23 +507,23 @@ function initSavingsSharesGrowthChart() {
   });
 }
 
-function initIncomeExpenseChart() {
+function initIncomeExpenseChart(data) {
   const ctx = document.getElementById('incomeExpenseChart');
   if (!ctx) return;
 
   new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+      labels: data.months,
       datasets: [
         {
           label: 'Mapato',
-          data: [600000, 650000, 700000, 680000, 750000, 800000, 820000, 850000, 900000, 950000, 1000000, 1100000],
+          data: data.incomeTrend,
           backgroundColor: '#10b981'
         },
         {
           label: 'Matumizi',
-          data: [400000, 420000, 450000, 430000, 480000, 500000, 520000, 550000, 600000, 620000, 650000, 700000],
+          data: data.expenseTrend,
           backgroundColor: '#ef4444'
         }
       ]
@@ -488,7 +537,7 @@ function initIncomeExpenseChart() {
   });
 }
 
-function initLoanRepaymentChart() {
+function initLoanRepaymentChart(data) {
   const ctx = document.getElementById('loanRepaymentChart');
   if (!ctx) return;
 
@@ -497,7 +546,7 @@ function initLoanRepaymentChart() {
     data: {
       labels: ['Ililipwa', 'Salio Lililobaki'],
       datasets: [{
-        data: [100000, 700000],
+        data: [data.loanPaid, data.loanOutstanding],
         backgroundColor: ['#10b981', '#f59e0b']
       }]
     },
@@ -507,17 +556,17 @@ function initLoanRepaymentChart() {
   });
 }
 
-function initMonthlyContributionsChart() {
+function initMonthlyContributionsChart(data) {
   const ctx = document.getElementById('monthlyContributionsChart');
   if (!ctx) return;
 
   new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+      labels: data.months,
       datasets: [{
         label: 'Mchango wa Kila Mwezi',
-        data: [500000, 500000, 500000, 500000, 500000, 500000, 500000, 500000, 500000, 500000, 500000, 500000],
+        data: data.contributionsTrend,
         backgroundColor: '#2563eb'
       }]
     },
@@ -527,18 +576,18 @@ function initMonthlyContributionsChart() {
   });
 }
 
-function initInterestDividendsChart() {
+function initInterestDividendsChart(data) {
   const ctx = document.getElementById('interestDividendsChart');
   if (!ctx) return;
 
   new Chart(ctx, {
     type: 'line',
     data: {
-      labels: ['2020', '2021', '2022', '2023', '2024', '2025'],
+      labels: data.months,
       datasets: [
         {
           label: 'Riba',
-          data: [50000, 85000, 120000, 180000, 320000, 425000],
+          data: data.interestTrend,
           borderColor: '#f59e0b',
           backgroundColor: 'rgba(245, 158, 11, 0.1)',
           borderWidth: 3,
@@ -547,7 +596,7 @@ function initInterestDividendsChart() {
         },
         {
           label: 'Gawio',
-          data: [30000, 60000, 100000, 150000, 200000, 210000],
+          data: data.dividendsTrend,
           borderColor: '#10b981',
           backgroundColor: 'rgba(16, 185, 129, 0.1)',
           borderWidth: 3,
@@ -562,7 +611,7 @@ function initInterestDividendsChart() {
   });
 }
 
-function initLoansPaidChart() {
+function initLoansPaidChart(data) {
   const ctx = document.getElementById('loansPaidChart');
   if (!ctx) return;
 
@@ -572,7 +621,7 @@ function initLoansPaidChart() {
       labels: ['Ililipwa', 'Salio'],
       datasets: [{
         label: 'Kiasi (TZS)',
-        data: [1500000, 1200000],
+        data: [data.loanPaid, data.loanOutstanding],
         backgroundColor: ['#10b981', '#ef4444']
       }]
     },
@@ -582,7 +631,7 @@ function initLoansPaidChart() {
   });
 }
 
-function initAssetAllocationChart() {
+function initAssetAllocationChart(data) {
   const ctx = document.getElementById('assetAllocationChart');
   if (!ctx) return;
 
@@ -591,7 +640,7 @@ function initAssetAllocationChart() {
     data: {
       labels: ['Akiba', 'Hisa', 'Mikopo'],
       datasets: [{
-        data: [8500000, 4200000, 1200000],
+        data: [data.currentSavings, data.currentShares, data.currentLoans],
         backgroundColor: ['#2563eb', '#10b981', '#f59e0b'],
         borderColor: '#fff',
         borderWidth: 3
@@ -606,6 +655,205 @@ function initAssetAllocationChart() {
       }
     }
   });
+}
+
+// ====================
+// Shares Functions
+// ====================
+
+function calcGroupTotal() {
+  const qty = document.getElementById('groupShareQty').value;
+  document.getElementById('groupShareTotal').value = 'TZS ' + (qty * 10000).toLocaleString();
+}
+
+function submitBuyGroupShares() {
+  const qty = document.getElementById('groupShareQty').value;
+  fetch('/api/shares/buy', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'GROUP', quantity: qty }) })
+  .then(res => res.json()).then(data => { alert(data.message); if(data.success) window.location.reload(); });
+}
+
+function submitSellShares() {
+  const qty = document.getElementById('sellShareQty').value;
+  const price = document.getElementById('sellSharePrice').value;
+  fetch('/api/shares/sell', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ quantity: qty, price: price }) })
+  .then(res => res.json()).then(data => { alert(data.message); if(data.success) window.location.reload(); });
+}
+
+function buyMarketShare(btn) {
+  if(confirm('Unataka kununua hisa hizi?')) {
+    fetch('/api/shares/buy-market', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ saleId: btn.dataset.id }) })
+    .then(res => res.json()).then(data => { alert(data.message); if(data.success) window.location.reload(); });
+  }
+}
+
+// ====================
+// Profile & Loan Management
+// ====================
+
+async function saveProfileChanges(section) {
+  let btn = (document.activeElement && document.activeElement.tagName === 'BUTTON') ? document.activeElement : null;
+  const orig = btn ? btn.innerHTML : null;
+  if (btn) { btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Inasasisha...'; btn.disabled = true; }
+
+  try {
+    const fd = new FormData();
+    const fieldMap = {
+      firstName: 'profileFirstName', middleName: 'profileMiddleName', lastName: 'profileLastName',
+      dob: 'profileDob', gender: 'profileGender', maritalStatus: 'profileMarital', phone: 'profilePhone',
+      street: 'profileStreet', district: 'profileDistrict', region: 'profileRegion', addressDescription: 'profileAddressDesc',
+      nextOfKinName: 'nokName', nextOfKinPhone: 'nokPhone', nextOfKinRelation: 'nokRelation', nextOfKinPercent: 'nokPercent'
+    };
+
+    Object.entries(fieldMap).forEach(([key, id]) => {
+      const el = document.getElementById(id);
+      if (el && el.value !== undefined) fd.append(key, el.value);
+    });
+
+    const fileEl = document.getElementById('profilePicInput');
+    if (fileEl && fileEl.files && fileEl.files[0]) fd.append('profileImage', fileEl.files[0]);
+
+    const res = await fetch('/api/profile/update', { method: 'POST', body: fd });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Save failed');
+
+    if (data.success) { alert(data.message || 'Taarifa zimehifadhiwa.'); window.location.reload(); } 
+    else { alert(data.message || 'Imeshindwa kuhifadhi.'); }
+  } catch (e) { console.error(e); alert('Kosa: ' + (e.message || e)); } 
+  finally { if (btn) { btn.innerHTML = orig; btn.disabled = false; } }
+}
+
+function changePassword() {
+  const current = document.getElementById('currentPassword').value;
+  const newPass = document.getElementById('newPassword').value;
+  const confirmPass = document.getElementById('confirmPassword').value;
+  if (newPass !== confirmPass) { alert('Nenosiri mpya hazifanani.'); return; }
+  fetch('/api/profile/password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ currentPassword: current, newPassword: newPass }) })
+  .then(res => res.json()).then(data => { alert(data.message); if (data.success) document.getElementById('passwordForm').reset(); });
+}
+
+function previewProfilePic(event) {
+  if (event.target.files && event.target.files[0]) {
+    document.getElementById('profileImage').src = URL.createObjectURL(event.target.files[0]);
+  }
+}
+
+function downloadMembershipCard() {
+  const card = document.querySelector('.membership-card');
+  if (card && typeof html2canvas !== 'undefined') {
+    html2canvas(card).then(canvas => {
+      const link = document.createElement('a');
+      link.download = 'AkibaPlus_MembershipCard.png';
+      link.href = canvas.toDataURL();
+      link.click();
+    });
+  } else { alert('Maktaba ya html2canvas haijapakiwa.'); }
+}
+
+function initiateLoanPayment(btn) {
+  const id = btn.getAttribute('data-id');
+  const nextPayment = btn.getAttribute('data-nextpayment');
+  loadPage('loan-payment');
+  const select = document.getElementById('selectedLoan');
+  if (select) { select.value = id; updatePaymentSummary(); }
+  const amountInput = document.getElementById('paymentAmount');
+  if (amountInput) amountInput.value = parseFloat(String(nextPayment).replace(/[^0-9.-]+/g,"")) || 10000;
+  updatePaymentSummary();
+}
+
+function updatePaymentSummary() {
+  const select = document.getElementById('selectedLoan');
+  if (!select) return;
+  const selectedOption = select.options[select.selectedIndex];
+  if (!selectedOption) return;
+  const currentBalance = parseFloat(String(selectedOption.getAttribute('data-balance')).replace(/[^0-9.-]+/g,"")) || 0;
+  const amount = parseFloat(document.getElementById('paymentAmount').value) || 0;
+  document.getElementById('currentBalance').innerText = 'TZS ' + currentBalance.toLocaleString();
+  document.getElementById('summaryAmount').innerText = 'TZS ' + amount.toLocaleString();
+  document.getElementById('newBalance').innerText = 'TZS ' + Math.max(0, currentBalance - amount).toLocaleString();
+}
+
+function submitLoanPayment(btn) {
+  const amount = document.getElementById('paymentAmount').value;
+  const loanId = document.getElementById('selectedLoan').value;
+  let method = document.getElementById('bankDetails').style.display !== 'none' ? 'BANK' : 'MOBILE';
+  if (!loanId || !amount || amount < 1000) { alert('Tafadhali chagua mkopo na weka kiasi halali.'); return; }
+  const originalText = btn.innerHTML; btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Inachakata...'; btn.disabled = true;
+  fetch('/api/loans/pay', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ amount: amount, loanId: loanId, method: method }) })
+  .then(res => res.json()).then(data => { alert(data.message); if (data.success) window.location.reload(); })
+  .catch(err => alert('Hitilafu imetokea.')).finally(() => { btn.innerHTML = originalText; btn.disabled = false; });
+}
+
+function showLoanDetails(btn) {
+  const data = btn.dataset;
+  const formatMoney = (amount) => 'TZS ' + (parseFloat(String(amount).replace(/[^0-9.-]+/g,"")) || 0).toLocaleString();
+  document.getElementById('detailType').innerText = (data.type || 'Mkopo') + (data.ref ? ' - ' + data.ref : '');
+  document.getElementById('detailRef').innerText = data.ref || 'N/A';
+  document.getElementById('detailDate').innerText = data.date || '-';
+  document.getElementById('detailDueDate').innerText = data.duedate || '-';
+  document.getElementById('detailStatus').innerText = data.status || 'PENDING';
+  
+  const progress = Math.round(parseFloat(data.progress) || 0);
+  const progressBar = document.getElementById('detailProgressBar');
+  const progressText = document.getElementById('detailProgressText');
+  if (progressBar) progressBar.style.width = progress + '%';
+  if (progressText) progressText.innerText = progress + '%';
+  
+  document.getElementById('detailAmount').innerText = formatMoney(data.amount);
+  document.getElementById('detailBalance').innerText = formatMoney(data.balance);
+  
+  // Reset and show loading
+  const scheduleBody = document.getElementById('scheduleBody');
+  const historyBody = document.getElementById('historyBody');
+  if (scheduleBody) scheduleBody.innerHTML = '<tr><td colspan="7" class="text-center py-4"><i class="fas fa-spinner fa-spin me-2"></i>Inapakia...</td></tr>';
+  if (historyBody) historyBody.innerHTML = '<tr><td colspan="4" class="text-center py-4"><i class="fas fa-spinner fa-spin me-2"></i>Inapakia...</td></tr>';
+
+  loadPage('loan-details');
+
+  if (data.ref) {
+    fetch(`/api/loans/details?ref=${encodeURIComponent(data.ref)}`)
+        .then(response => response.ok ? response.json() : Promise.reject('Loan not found'))
+        .then(details => {
+            if (document.getElementById('detailInterest')) document.getElementById('detailInterest').innerText = formatMoney(details.interest);
+            if (document.getElementById('detailTotalDue')) document.getElementById('detailTotalDue').innerText = formatMoney(details.totalDue);
+            if (document.getElementById('detailPaid')) document.getElementById('detailPaid').innerText = formatMoney(details.paidAmount);
+            
+            if (scheduleBody) {
+                scheduleBody.innerHTML = '';
+                (details.schedule || []).forEach((item, index) => {
+                    scheduleBody.innerHTML += `<tr>
+                        <td>${index + 1}</td>
+                        <td>${item.date}</td>
+                        <td>${formatMoney(item.principal)}</td>
+                        <td>${formatMoney(item.interest)}</td>
+                        <td>${formatMoney(item.total)}</td>
+                        <td>${formatMoney(item.balance)}</td>
+                        <td><span class="badge bg-${item.status === 'PAID' ? 'success' : (item.status === 'OVERDUE' ? 'danger' : 'warning')}">${item.status}</span></td>
+                    </tr>`;
+                });
+            }
+
+            if (historyBody) {
+                historyBody.innerHTML = '';
+                if (details.history && details.history.length > 0) {
+                    details.history.forEach(item => {
+                        historyBody.innerHTML += `<tr>
+                            <td>${item.date}</td>
+                            <td>${item.reference}</td>
+                            <td>${item.method}</td>
+                            <td class="text-success fw-bold">${formatMoney(item.amount)}</td>
+                        </tr>`;
+                    });
+                } else {
+                    historyBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-4">Hakuna malipo yaliyofanyika.</td></tr>';
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching loan details:', error);
+            if (scheduleBody) scheduleBody.innerHTML = '<tr><td colspan="7" class="text-center text-danger py-4">Imeshindwa kupakia taarifa.</td></tr>';
+            if (historyBody) historyBody.innerHTML = '<tr><td colspan="4" class="text-center text-danger py-4">Imeshindwa kupakia taarifa.</td></tr>';
+        });
+  }
 }
 
 // Initialize on page load
@@ -624,4 +872,38 @@ document.addEventListener('DOMContentLoaded', function() {
   if (document.getElementById('stepIndicator')) {
     updateStepIndicator(1);
   }
+  
+  // Initialize analytics if that's the active page
+  if (document.getElementById('analytics') && document.getElementById('analytics').classList.contains('active')) {
+    initializeAnalyticsCharts();
+  }
 });
+
+// Export functions to window to ensure access from HTML
+window.loadPage = loadPage;
+window.showToast = showToast;
+window.submitDeposit = submitDeposit;
+window.submitWithdraw = submitWithdraw;
+window.submitBuyGroupShares = submitBuyGroupShares;
+window.submitSellShares = submitSellShares;
+window.buyMarketShare = buyMarketShare;
+window.calcGroupTotal = calcGroupTotal;
+window.saveProfileChanges = saveProfileChanges;
+window.previewProfilePic = previewProfilePic;
+window.downloadMembershipCard = downloadMembershipCard;
+window.changePassword = changePassword;
+window.initiateLoanPayment = initiateLoanPayment;
+window.updatePaymentSummary = updatePaymentSummary;
+window.submitLoanPayment = submitLoanPayment;
+window.showLoanDetails = showLoanDetails;
+window.selectPaymentMethod = selectPaymentMethod;
+window.setMobileNumber = setMobileNumber;
+window.nextStep = nextStep;
+window.toggleCollateral = toggleCollateral;
+window.toggleGuarantor = toggleGuarantor;
+window.selectEmployment = selectEmployment;
+window.submitLoanApplication = submitLoanApplication;
+window.preparePayment = preparePayment;
+window.confirmPenaltyPayment = confirmPenaltyPayment;
+window.signAttendance = signAttendance;
+window.filterStatements = filterStatements;

@@ -569,4 +569,10 @@ public class MemberApiController {
         double distance = R * c * 1000; // convert to meters
         return distance;
     }
+
+    @GetMapping("/member/analytics")
+    public ResponseEntity<?> getMemberAnalytics(Authentication authentication) {
+        String email = authentication.getName();
+        return ResponseEntity.ok(memberService.getAnalyticsData(email));
+    }
 }

@@ -28,6 +28,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -166,8 +167,10 @@ public class MemberService {
             map.put("date", t.getDate().format(DateTimeFormatter.ofPattern("dd MMM yyyy")));
             map.put("type", t.getType());
             map.put("description", t.getDescription());
-            map.put("amount", "TZS " + String.format("%,.0f", t.getAmount()));
-            map.put("balance", "TZS " + String.format("%,.0f", t.getBalance()));
+            BigDecimal amount = t.getAmount() != null ? t.getAmount() : BigDecimal.ZERO;
+            BigDecimal balance = t.getBalance() != null ? t.getBalance() : BigDecimal.ZERO;
+            map.put("amount", "TZS " + String.format("%,.0f", amount));
+            map.put("balance", "TZS " + String.format("%,.0f", balance));
             map.put("status", t.getStatus());
             txns.add(map);
         }
@@ -254,10 +257,12 @@ public class MemberService {
                 map.put("price", "TZS " + String.format("%,.0f", price));
                 
                 BigDecimal amount = t.getAmount() != null ? t.getAmount() : BigDecimal.ZERO;
-                BigDecimal quantity = amount.divide(price, 0, java.math.RoundingMode.DOWN);
+                // Use absolute value to show positive quantity and total cost
+                BigDecimal absAmount = amount.abs();
+                BigDecimal quantity = absAmount.divide(price, 0, java.math.RoundingMode.DOWN);
                 
                 map.put("quantity", quantity);
-                map.put("total", "TZS " + String.format("%,.0f", amount));
+                map.put("total", "TZS " + String.format("%,.0f", absAmount));
                 return map;
             })
             .collect(Collectors.toList());
@@ -595,5 +600,98 @@ public class MemberService {
         txn.setDate(LocalDate.now());
         txn.setStatus("PENDING"); // Mark as pending payment
         transactionRepository.save(txn);
+    }
+
+    public Map<String, Object> getAnalyticsData(String email) {
+        Optional<Member> memberOpt = memberRepository.findByUser_Email(email);
+        if (memberOpt.isEmpty()) return new HashMap<>();
+        Member member = memberOpt.get();
+        
+        List<Transaction> allTxns = transactionRepository.findByMember(member);
+        LocalDate start2026 = LocalDate.of(2026, 1, 1);
+        LocalDate end2026 = LocalDate.of(2026, 12, 31);
+
+        // Filter transactions for 2026
+        List<Transaction> txns2026 = allTxns.stream()
+            .filter(t -> !t.getDate().isBefore(start2026) && !t.getDate().isAfter(end2026))
+            .collect(Collectors.toList());
+
+        Map<String, Object> data = new HashMap<>();
+        
+        List<String> months = new ArrayList<>();
+        List<BigDecimal> savingsTrend = new ArrayList<>();
+        List<BigDecimal> sharesTrend = new ArrayList<>();
+        List<BigDecimal> incomeTrend = new ArrayList<>();
+        List<BigDecimal> expenseTrend = new ArrayList<>();
+        List<BigDecimal> contributionsTrend = new ArrayList<>();
+        List<BigDecimal> interestTrend = new ArrayList<>();
+        List<BigDecimal> dividendsTrend = new ArrayList<>();
+
+        // Calculate initial values before 2026
+        BigDecimal runningShares = allTxns.stream()
+            .filter(t -> t.getDate().isBefore(start2026))
+            .filter(t -> "HISA".equalsIgnoreCase(t.getType()) || "SHARES".equalsIgnoreCase(t.getType()))
+            .map(Transaction::getAmount)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+            
+        BigDecimal runningSavings = allTxns.stream()
+            .filter(t -> t.getDate().isBefore(start2026))
+            .max(Comparator.comparing(Transaction::getDate).thenComparing(Transaction::getId))
+            .map(Transaction::getBalance)
+            .orElse(BigDecimal.ZERO);
+
+        for (int m = 1; m <= 12; m++) {
+            LocalDate monthStart = LocalDate.of(2026, m, 1);
+            LocalDate monthEnd = monthStart.plusMonths(1).minusDays(1);
+            months.add(monthStart.getMonth().toString().substring(0, 3));
+
+            List<Transaction> monthTxns = txns2026.stream()
+                .filter(t -> !t.getDate().isBefore(monthStart) && !t.getDate().isAfter(monthEnd))
+                .collect(Collectors.toList());
+
+            // Savings Balance
+            Optional<Transaction> lastTxn = monthTxns.stream()
+                .max(Comparator.comparing(Transaction::getDate).thenComparing(Transaction::getId));
+            if (lastTxn.isPresent()) runningSavings = lastTxn.get().getBalance();
+            savingsTrend.add(runningSavings);
+
+            // Shares Value
+            BigDecimal sharesChange = monthTxns.stream()
+                .filter(t -> "HISA".equalsIgnoreCase(t.getType()) || "SHARES".equalsIgnoreCase(t.getType()))
+                .map(Transaction::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+            runningShares = runningShares.add(sharesChange);
+            sharesTrend.add(runningShares);
+
+            // Income & Expenses
+            incomeTrend.add(monthTxns.stream()
+                .filter(t -> List.of("AMANA", "DEPOSIT", "RIBA", "INTEREST", "GAWIO", "DIVIDEND").contains(t.getType().toUpperCase()))
+                .map(Transaction::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add));
+            
+            expenseTrend.add(monthTxns.stream()
+                .filter(t -> List.of("TOZO", "WITHDRAWAL", "FAINI", "FINE").contains(t.getType().toUpperCase()))
+                .map(t -> t.getAmount().abs()).reduce(BigDecimal.ZERO, BigDecimal::add));
+
+            contributionsTrend.add(monthTxns.stream().filter(t -> "AMANA".equalsIgnoreCase(t.getType())).map(Transaction::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add));
+            interestTrend.add(monthTxns.stream().filter(t -> "RIBA".equalsIgnoreCase(t.getType())).map(Transaction::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add));
+            dividendsTrend.add(monthTxns.stream().filter(t -> "GAWIO".equalsIgnoreCase(t.getType())).map(Transaction::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add));
+        }
+
+        data.put("months", months);
+        data.put("savingsTrend", savingsTrend);
+        data.put("sharesTrend", sharesTrend);
+        data.put("incomeTrend", incomeTrend);
+        data.put("expenseTrend", expenseTrend);
+        data.put("contributionsTrend", contributionsTrend);
+        data.put("interestTrend", interestTrend);
+        data.put("dividendsTrend", dividendsTrend);
+        
+        data.put("loanPaid", txns2026.stream().filter(t -> t.getType() != null && t.getType().contains("MALIPO_MKOPO")).map(Transaction::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add));
+        data.put("loanOutstanding", getLoanBalance(email));
+        data.put("currentSavings", getSavingsBalance(email));
+        data.put("currentShares", getShareValue(email));
+        data.put("currentLoans", getLoanBalance(email));
+
+        return data;
     }
 }

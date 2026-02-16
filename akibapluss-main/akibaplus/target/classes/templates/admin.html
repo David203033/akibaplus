@@ -243,7 +243,7 @@
                   <i class="fas fa-users me-3"></i>Dhibiti Wanachama
                 </button>
                 <button class="btn btn-success w-100 mb-3 rounded-pill py-3" onclick="loadPage('loans')">
-                  <i class="fas fa-file-invoice-dollar me-3"></i>Idhinisha Mikopo
+                  <i class="fas fa-file-invoice-dollar me-3"></i>Angalia Mikopo
                 </button>
                 <button class="btn btn-info w-100 mb-3 rounded-pill py-3 text-white" onclick="loadPage('expenses')">
                   <i class="fas fa-receipt me-3"></i>Rekodi Matumizi
@@ -658,12 +658,14 @@
         <button class="nav-link px-4 py-3 fs-5 fw-semibold" id="pendingLoans-tab" data-bs-toggle="tab" data-bs-target="#pendingLoans" type="button">
           <i class="fas fa-clock me-2"></i>Yanayosubiri Idhini
           <span class="badge bg-warning rounded-pill ms-2" th:text="${loanStats['pendingLoansCount'] ?: 0}">0</span>
+          <span class="badge bg-warning rounded-pill ms-2" th:text="${loanStats['pendingLoansCount']}">0</span>
         </button>
       </li>
       <li class="nav-item" role="presentation">
         <button class="nav-link px-4 py-3 fs-5 fw-semibold" id="atRiskLoans-tab" data-bs-toggle="tab" data-bs-target="#atRiskLoans" type="button">
           <i class="fas fa-exclamation-triangle me-2"></i>Hatari
           <span class="badge bg-danger rounded-pill ms-2" th:text="${loanStats['atRiskLoansCount'] ?: 0}">0</span>
+          <span class="badge bg-danger rounded-pill ms-2" th:text="${loanStats['atRiskLoansCount']}">0</span>
         </button>
       </li>
     </ul>
@@ -780,14 +782,14 @@
                 </thead>
                 <tbody id="pendingLoansBody">
                   <tr th:each="l : ${pendingLoansList}">
+                  <tr th:each="l : ${pendingLoansList}" th:if="${l != null}">
                     <td class="fw-semibold ps-4" th:text="${l.member}">Mwanachama</td>
                     <td th:text="${l.amount}">Kiasi</td>
                     <td th:text="${l.type}">Aina</td>
                     <td th:text="${l.date}">Tarehe</td>
                     <td><span class="badge bg-info" th:text="${l.score}">Score</span></td>
                     <td class="text-center">
-                        <button class="btn btn-sm btn-success me-1" title="Idhinisha"><i class="fas fa-check"></i></button>
-                        <button class="btn btn-sm btn-danger" title="Kataa"><i class="fas fa-times"></i></button>
+                        <span class="badge bg-secondary">Automatic</span>
                     </td>
                   </tr>
                   <tr th:if="${#lists.isEmpty(pendingLoansList)}">
@@ -822,6 +824,7 @@
                 </thead>
                 <tbody id="atRiskLoansBody">
                   <tr th:each="l : ${atRiskLoansList}">
+                  <tr th:each="l : ${atRiskLoansList}" th:if="${l != null}">
                     <td class="fw-semibold ps-4" th:text="${l.member}">Mwanachama</td>
                     <td th:text="${l.balance}">Salio</td>
                     <td th:text="${l.daysOverdue} + ' Siku'">Siku</td>
@@ -861,6 +864,7 @@
             <i class="fas fa-check-circle me-3 fs-5"></i>
             Thibitisha Amana Zisizosubiri
             <span class="badge bg-dark ms-2 fs-5" id="savingsPendingDeposits">18</span>
+            <span class="badge bg-dark ms-2 fs-5" id="savingsPendingDeposits" th:text="${savingsStats['pendingDepositsCount']}">0</span>
           </button>
         </div> -->
       </div>
@@ -1921,6 +1925,12 @@
                   <td>197.250.123.45</td>
                   <td>Chrome - Windows 11</td>
                   <td>Dar es Salaam, TZ</td>
+                <tr th:each="log : ${loginLogs}">
+                  <td th:text="${log.user}">User</td>
+                  <td th:text="${log.time}">Time</td>
+                  <td th:text="${log.ip}">IP</td>
+                  <td th:text="${log.device}">Device</td>
+                  <td th:text="${log.location}">Location</td>
                   <td><span class="badge bg-success">Kufanikiwa</span></td>
                 </tr>
                 <tr>
@@ -1930,6 +1940,8 @@
                   <td>Safari - iPhone 14</td>
                   <td>Arusha, TZ</td>
                   <td><span class="badge bg-success">Kufanikiwa</span></td>
+                <tr th:if="${#lists.isEmpty(loginLogs)}">
+                  <td colspan="6" class="text-center text-muted py-4">Hakuna kumbukumbu za login zilizopatikana.</td>
                 </tr>
                 <tr>
                   <td>Admin Mkuu</td>
