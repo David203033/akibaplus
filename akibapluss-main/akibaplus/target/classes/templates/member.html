@@ -234,6 +234,23 @@
 </head>
 <body>
 
+  <!-- Fallback loader: prevent ReferenceError if /js/app.js fails to load -->
+  <script>
+    (function(){
+      if (typeof window._loadPageQueue === 'undefined') window._loadPageQueue = [];
+      if (typeof window.loadPage === 'undefined') {
+        // lightweight stub: queue calls until real implementation is present
+        window.loadPage = function(pageId) {
+          try {
+            window._loadPageQueue.push(pageId);
+          } catch (e) {
+            console.warn('Failed to queue loadPage call', e);
+          }
+        };
+      }
+    })();
+  </script>
+
   <!-- Navbar with Notification Bell -->
   <nav class="navbar navbar-dark fixed-top">
     <div class="container-fluid">
@@ -2299,10 +2316,11 @@
                       <button class="btn btn-outline-primary rounded-pill px-4 py-3" data-bs-toggle="modal" th:data-bs-target="'#meetingDetailsModal' + ${meeting.id}">
                         <i class="fas fa-info-circle me-2"></i>Maelezo Zaidi
                       </button>
-                      <button class="btn btn-success rounded-pill px-4 py-3 shadow" 
-                              th:onclick="'signAttendance(' + ${meeting.id} + ', \'' + ${#strings.escapeJavaScript(meeting.name)} + '\', ' + ${meeting.latitude} + ', ' + ${meeting.longitude} + ')'">
-                        <i class="fas fa-signature me-2"></i>Saini Mahudhurio
-                      </button>
+                            <button class="btn btn-success rounded-pill px-4 py-3 shadow"
+                                    th:attr="data-meeting-id=${meeting.id}, data-meeting-name=${#strings.escapeJavaScript(meeting.name)}, data-latitude=${meeting.latitude}, data-longitude=${meeting.longitude}, data-meeting-date=${meeting.date}, data-meeting-start=${meeting.time}, data-meeting-end=${meeting.endTime}, data-meeting-radius=${meeting.radius}"
+                                    onclick="signAttendance(parseInt(this.dataset.meetingId), this.dataset.meetingName, parseFloat(this.dataset.latitude), parseFloat(this.dataset.longitude))">
+                              <i class="fas fa-signature me-2"></i>Saini Mahudhurio
+                            </button>
                     </div>
                   </div>
                 </div>

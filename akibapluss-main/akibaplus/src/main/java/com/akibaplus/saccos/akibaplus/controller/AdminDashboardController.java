@@ -270,7 +270,7 @@ public class AdminDashboardController {
             Map<String, Object> map = new HashMap<>();
             map.put("name", u.getName());
             map.put("email", u.getEmail());
-            map.put("role", u.getRoles().toString());
+            map.put("role", u.getRoles() != null ? u.getRoles().toString() : "USER");
             map.put("twoFactor", "Disabled");
             map.put("status", "Active");
             map.put("lastLogin", "Leo");
@@ -653,6 +653,9 @@ public class AdminDashboardController {
     @ResponseBody
     public List<Map<String, Object>> getMeetingsList() {
         List<Meeting> allMeetings = meetingRepository.findAll();
+        java.time.LocalDate today = java.time.LocalDate.now();
+        java.time.LocalTime nowTime = java.time.LocalTime.now();
+
         return allMeetings.stream()
                 .sorted((m1, m2) -> {
                     if (m1.getDate() == null || m2.getDate() == null) return 0;
@@ -667,7 +670,33 @@ public class AdminDashboardController {
                     }
                     map.put("date", (m.getDate() != null ? m.getDate().format(DateTimeFormatter.ofPattern("dd MMM yyyy")) : "") + ", " + timeRange);
                     map.put("location", m.getLocation());
-                    map.put("status", m.getStatus());
+                    // include counts (primitive fields)
+                    map.put("expected", m.getExpected());
+                    map.put("attended", m.getAttended());
+
+                    // Compute dynamic status if meeting has ended
+                    String status = m.getStatus() != null ? m.getStatus() : "SCHEDULED";
+                    try {
+                        if (m.getDate() != null) {
+                            if (m.getDate().isBefore(today)) {
+                                status = "COMPLETED";
+                            } else if (m.getDate().isEqual(today)) {
+                                if (m.getEndTime() != null && nowTime.isAfter(m.getEndTime())) {
+                                    status = "COMPLETED";
+                                } else if (m.getTime() != null && nowTime.isBefore(m.getTime())) {
+                                    status = "UPCOMING";
+                                } else {
+                                    status = "ONGOING";
+                                }
+                            } else {
+                                status = "UPCOMING";
+                            }
+                        }
+                    } catch (Exception e) {
+                        // fallback to persisted status
+                    }
+
+                    map.put("status", status);
                     return map;
                 }).collect(Collectors.toList());
     }

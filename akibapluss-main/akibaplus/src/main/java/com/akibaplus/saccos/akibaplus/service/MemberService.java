@@ -155,6 +155,8 @@ public class MemberService {
         
         // Sort by date desc and limit
         entities.sort((t1, t2) -> {
+            if (t1.getDate() == null) return 1;
+            if (t2.getDate() == null) return -1;
             int dateCompare = t2.getDate().compareTo(t1.getDate());
             if (dateCompare == 0) {
                 return Long.compare(t2.getId(), t1.getId());
@@ -164,7 +166,7 @@ public class MemberService {
         
         for (Transaction t : entities) {
             Map<String, Object> map = new HashMap<>();
-            map.put("date", t.getDate().format(DateTimeFormatter.ofPattern("dd MMM yyyy")));
+            map.put("date", t.getDate() != null ? t.getDate().format(DateTimeFormatter.ofPattern("dd MMM yyyy")) : "N/A");
             map.put("type", t.getType());
             map.put("description", t.getDescription());
             BigDecimal amount = t.getAmount() != null ? t.getAmount() : BigDecimal.ZERO;
@@ -249,10 +251,14 @@ public class MemberService {
         
         return entities.stream()
             .filter(t -> "HISA".equalsIgnoreCase(t.getType()) || "SHARES".equalsIgnoreCase(t.getType()))
-            .sorted((t1, t2) -> t2.getDate().compareTo(t1.getDate()))
+            .sorted((t1, t2) -> {
+                if (t1.getDate() == null) return 1;
+                if (t2.getDate() == null) return -1;
+                return t2.getDate().compareTo(t1.getDate());
+            })
             .map(t -> {
                 Map<String, Object> map = new HashMap<>();
-                map.put("date", t.getDate().format(DateTimeFormatter.ofPattern("dd MMM yyyy")));
+                map.put("date", t.getDate() != null ? t.getDate().format(DateTimeFormatter.ofPattern("dd MMM yyyy")) : "N/A");
                 BigDecimal price = new BigDecimal("10000"); // Fixed price for now
                 map.put("price", "TZS " + String.format("%,.0f", price));
                 
@@ -336,35 +342,53 @@ public class MemberService {
     public List<Map<String, Object>> getUpcomingMeetings() {
         List<Map<String, Object>> meetings = new ArrayList<>();
         List<Meeting> entities = meetingRepository.findAll();
-        
+        java.time.LocalDate today = java.time.LocalDate.now();
+        java.time.LocalTime nowTime = java.time.LocalTime.now();
+
         for (Meeting m : entities) {
-            if (m.getDate() != null && !m.getDate().isBefore(LocalDate.now())) {
-                Map<String, Object> map = new HashMap<>();
-                map.put("id", m.getId());
-                map.put("name", m.getName());
-                map.put("date", m.getDate().format(DateTimeFormatter.ofPattern("dd MMM yyyy")));
-                map.put("time", m.getTime() + (m.getEndTime() != null ? " - " + m.getEndTime() : ""));
-                map.put("location", m.getLocation());
-                map.put("desc", m.getDescription());
-                
-                // Add coordinates for attendance
-                String latLng = m.getLatLng();
-                if (latLng != null && latLng.contains(",")) {
-                    String[] parts = latLng.split(",");
-                    try {
-                        map.put("latitude", Double.parseDouble(parts[0].trim()));
-                        map.put("longitude", Double.parseDouble(parts[1].trim()));
-                    } catch (Exception e) {
-                        map.put("latitude", 0.0);
-                        map.put("longitude", 0.0);
-                    }
-                } else {
+            if (m.getDate() == null) continue;
+            boolean include = false;
+            if (m.getDate().isAfter(today)) {
+                include = true;
+            } else if (m.getDate().isEqual(today)) {
+                if (m.getEndTime() == null || !nowTime.isAfter(m.getEndTime())) {
+                    include = true;
+                }
+            }
+            if (!include) continue;
+
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", m.getId());
+            map.put("name", m.getName());
+            map.put("date", m.getDate().format(DateTimeFormatter.ofPattern("dd MMM yyyy")));
+            map.put("time", (m.getTime() != null ? m.getTime().toString() : "") + (m.getEndTime() != null ? " - " + m.getEndTime().toString() : ""));
+            // Expose start/end separately so templates can access them safely
+            map.put("startTime", m.getTime() != null ? m.getTime().toString() : "");
+            map.put("endTime", m.getEndTime() != null ? m.getEndTime().toString() : "");
+            map.put("location", m.getLocation());
+            map.put("desc", m.getDescription());
+
+            // Add coordinates for attendance
+            String latLng = m.getLatLng();
+            if (latLng != null && latLng.contains(",")) {
+                String[] parts = latLng.split(",");
+                try {
+                    map.put("latitude", Double.parseDouble(parts[0].trim()));
+                    map.put("longitude", Double.parseDouble(parts[1].trim()));
+                } catch (Exception e) {
                     map.put("latitude", 0.0);
                     map.put("longitude", 0.0);
                 }
-                
-                meetings.add(map);
+            } else {
+                map.put("latitude", 0.0);
+                map.put("longitude", 0.0);
             }
+
+            map.put("attended", m.getAttended());
+            map.put("expected", m.getExpected());
+            map.put("radius", m.getRadius());
+
+            meetings.add(map);
         }
         return meetings;
     }
@@ -372,16 +396,27 @@ public class MemberService {
     public List<Map<String, Object>> getPastMeetings() {
         List<Map<String, Object>> meetings = new ArrayList<>();
         List<Meeting> entities = meetingRepository.findAll();
-        
+        java.time.LocalDate today = java.time.LocalDate.now();
+        java.time.LocalTime nowTime = java.time.LocalTime.now();
+
         for (Meeting m : entities) {
-            if (m.getDate() != null && m.getDate().isBefore(LocalDate.now())) {
-                Map<String, Object> map = new HashMap<>();
-                map.put("id", m.getId());
-                map.put("name", m.getName());
-                map.put("date", m.getDate().format(DateTimeFormatter.ofPattern("dd MMM yyyy")));
-                map.put("status", "Imepita"); // Logic to check attendance could go here
-                meetings.add(map);
+            if (m.getDate() == null) continue;
+            boolean isPast = false;
+            if (m.getDate().isBefore(today)) {
+                isPast = true;
+            } else if (m.getDate().isEqual(today)) {
+                if (m.getEndTime() != null && nowTime.isAfter(m.getEndTime())) {
+                    isPast = true;
+                }
             }
+            if (!isPast) continue;
+
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", m.getId());
+            map.put("name", m.getName());
+            map.put("date", m.getDate().format(DateTimeFormatter.ofPattern("dd MMM yyyy")));
+            map.put("status", "Imepita"); // Logic to check attendance could go here
+            meetings.add(map);
         }
         return meetings;
     }
@@ -613,7 +648,7 @@ public class MemberService {
 
         // Filter transactions for 2026
         List<Transaction> txns2026 = allTxns.stream()
-            .filter(t -> !t.getDate().isBefore(start2026) && !t.getDate().isAfter(end2026))
+            .filter(t -> t.getDate() != null && !t.getDate().isBefore(start2026) && !t.getDate().isAfter(end2026))
             .collect(Collectors.toList());
 
         Map<String, Object> data = new HashMap<>();
@@ -629,13 +664,13 @@ public class MemberService {
 
         // Calculate initial values before 2026
         BigDecimal runningShares = allTxns.stream()
-            .filter(t -> t.getDate().isBefore(start2026))
+            .filter(t -> t.getDate() != null && t.getDate().isBefore(start2026))
             .filter(t -> "HISA".equalsIgnoreCase(t.getType()) || "SHARES".equalsIgnoreCase(t.getType()))
             .map(Transaction::getAmount)
             .reduce(BigDecimal.ZERO, BigDecimal::add);
             
         BigDecimal runningSavings = allTxns.stream()
-            .filter(t -> t.getDate().isBefore(start2026))
+            .filter(t -> t.getDate() != null && t.getDate().isBefore(start2026))
             .max(Comparator.comparing(Transaction::getDate).thenComparing(Transaction::getId))
             .map(Transaction::getBalance)
             .orElse(BigDecimal.ZERO);
@@ -646,11 +681,12 @@ public class MemberService {
             months.add(monthStart.getMonth().toString().substring(0, 3));
 
             List<Transaction> monthTxns = txns2026.stream()
-                .filter(t -> !t.getDate().isBefore(monthStart) && !t.getDate().isAfter(monthEnd))
+                .filter(t -> t.getDate() != null && !t.getDate().isBefore(monthStart) && !t.getDate().isAfter(monthEnd))
                 .collect(Collectors.toList());
 
             // Savings Balance
             Optional<Transaction> lastTxn = monthTxns.stream()
+                .filter(t -> t.getDate() != null)
                 .max(Comparator.comparing(Transaction::getDate).thenComparing(Transaction::getId));
             if (lastTxn.isPresent()) runningSavings = lastTxn.get().getBalance();
             savingsTrend.add(runningSavings);
@@ -665,11 +701,11 @@ public class MemberService {
 
             // Income & Expenses
             incomeTrend.add(monthTxns.stream()
-                .filter(t -> List.of("AMANA", "DEPOSIT", "RIBA", "INTEREST", "GAWIO", "DIVIDEND").contains(t.getType().toUpperCase()))
+                .filter(t -> t.getType() != null && List.of("AMANA", "DEPOSIT", "RIBA", "INTEREST", "GAWIO", "DIVIDEND").contains(t.getType().toUpperCase()))
                 .map(Transaction::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add));
             
             expenseTrend.add(monthTxns.stream()
-                .filter(t -> List.of("TOZO", "WITHDRAWAL", "FAINI", "FINE").contains(t.getType().toUpperCase()))
+                .filter(t -> t.getType() != null && List.of("TOZO", "WITHDRAWAL", "FAINI", "FINE").contains(t.getType().toUpperCase()))
                 .map(t -> t.getAmount().abs()).reduce(BigDecimal.ZERO, BigDecimal::add));
 
             contributionsTrend.add(monthTxns.stream().filter(t -> "AMANA".equalsIgnoreCase(t.getType())).map(Transaction::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add));

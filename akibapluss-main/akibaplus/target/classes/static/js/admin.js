@@ -17,6 +17,32 @@ function formatCurrency(amount) {
 function qs(selector, ctx = document) { return ctx.querySelector(selector); }
 function qsa(selector, ctx = document) { return Array.from(ctx.querySelectorAll(selector)); }
 
+function viewDetails(btn) {
+  const title = btn.getAttribute('data-title');
+  const fields = btn.getAttribute('data-fields').split('||');
+  
+  const modalTitle = document.getElementById('genericDetailsTitle');
+  const modalBody = document.getElementById('genericDetailsBody');
+  
+  if(modalTitle) modalTitle.textContent = title;
+  if(modalBody) {
+      modalBody.innerHTML = '';
+      const list = document.createElement('ul');
+      list.className = 'list-group list-group-flush';
+      
+      fields.forEach(field => {
+          const [key, value] = field.split('::');
+          const item = document.createElement('li');
+          item.className = 'list-group-item d-flex justify-content-between align-items-center px-0';
+          item.innerHTML = `<span class="fw-bold text-muted">${key}</span> <span class="fw-medium text-dark">${value}</span>`;
+          list.appendChild(item);
+      });
+      modalBody.appendChild(list);
+  }
+  
+  new bootstrap.Modal(document.getElementById('genericDetailsModal')).show();
+}
+
 // ============= TOASTS =============
 function showToast(message, type = 'success', toastId = 'actionToast', msgId = 'actionToastMessage') {
   const toast = document.getElementById(toastId);
@@ -137,18 +163,30 @@ function initReportsCharts() {
           {
             label: 'Akiba (TZS)',
             data: window.akibaData.chartSavingsTrend || [],
-            borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)',
-            tension: 0.4, fill: true
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16,185,129,0.2)',
+            tension: 0.4,
+            fill: true,
+            pointRadius: 5,
+            pointHoverRadius: 7
           },
           {
             label: 'Mikopo (TZS)',
             data: window.akibaData.chartLoans || window.akibaData.chartSavingsTrend || [],
-            borderColor: '#2563eb', backgroundColor: 'rgba(37,99,235,0.1)',
-            tension: 0.4, fill: true
+            borderColor: '#2563eb',
+            backgroundColor: 'rgba(37,99,235,0.2)',
+            tension: 0.4,
+            fill: true,
+            pointRadius: 5,
+            pointHoverRadius: 7
           }
         ]
       },
-      options: { responsive: true, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true } } }
+      options: { 
+        responsive: true, 
+        plugins: { legend: { position: 'top', labels: { font: { size: 14 } } }, tooltip: { mode: 'index', intersect: false } }, 
+        scales: { y: { beginAtZero: true, grid: { color: '#f0f0f0' } }, x: { grid: { display: false } } } 
+      }
     });
   }
 
@@ -164,10 +202,10 @@ function initReportsCharts() {
             window.akibaData.chartLoans || 0,
             window.akibaData.chartShares || 0
           ],
-          backgroundColor: ['#10b981', '#2563eb', '#f59e0b'], borderWidth: 0
+          backgroundColor: ['#10b981', '#2563eb', '#f59e0b'], borderWidth: 2, borderColor: '#ffffff'
         }]
       },
-      options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+      options: { responsive: true, plugins: { legend: { position: 'right', labels: { font: { size: 13 } } } }, cutout: '60%' }
     });
   }
 
@@ -177,9 +215,14 @@ function initReportsCharts() {
       type: 'bar',
       data: {
         labels: window.akibaData.expenseChartLabels || [],
-        datasets: [{ label: 'Matumizi (TZS 000)', data: window.akibaData.expenseChartData || [], backgroundColor: '#f59e0b' }]
+        datasets: [{ 
+          label: 'Matumizi (TZS)', 
+          data: window.akibaData.expenseChartData || [], 
+          backgroundColor: ['#f59e0b', '#ef4444', '#3b82f6', '#8b5cf6', '#10b981'],
+          borderRadius: 5
+        }]
       },
-      options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+      options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#f0f0f0' } }, x: { grid: { display: false } } } }
     });
   }
 }
@@ -508,3 +551,4 @@ window.saveNewUser = saveNewUser;
 window.save2FASettings = save2FASettings;
 window.toggle2FA = toggle2FA;
 window.filterLoginLogs = filterLoginLogs;
+window.viewDetails = viewDetails;

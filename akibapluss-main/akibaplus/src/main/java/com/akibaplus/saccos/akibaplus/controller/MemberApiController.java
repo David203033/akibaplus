@@ -511,9 +511,14 @@ public class MemberApiController {
 
             Meeting meeting = meetingOpt.get();
             
-            // Check if meeting is active/today
-            if (meeting.getDate().isBefore(LocalDate.now())) {
-                 return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Mkutano huu umeshapita."));
+            // Check meeting date and times
+            LocalDate today = LocalDate.now();
+            java.time.LocalTime nowTime = java.time.LocalTime.now();
+            if (meeting.getDate().isBefore(today)) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Mkutano huu umeshapita."));
+            }
+            if (meeting.getEndTime() != null && nowTime.isAfter(meeting.getEndTime())) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Muda wa kusaini umeshapitwa."));
             }
 
             // Parse meeting location
@@ -528,16 +533,34 @@ public class MemberApiController {
 
             double distance = calculateDistance(userLat, userLng, meetingLat, meetingLng);
             
-            // Allow 200 meters radius
-            if (distance > 200) {
+            // Determine allowed radius (use meeting.radius if set)
+            int allowedRadius = 200; // default meters
+            if (meeting.getRadius() != null && meeting.getRadius() > 0) allowedRadius = meeting.getRadius();
+            if (distance > allowedRadius) {
                 return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Uko mbali na eneo la mkutano (" + (int)distance + "m). Tafadhali sogea karibu."));
             }
 
-            // Update attendance count
+            // Check lateness: if attendee arrives more than 5 minutes after meeting start, record a late fine (2000)
+            if (meeting.getTime() != null) {
+                java.time.LocalTime graceTime = meeting.getTime().plusMinutes(5);
+                if (nowTime.isAfter(graceTime) && (meeting.getEndTime() == null || nowTime.isBefore(meeting.getEndTime()) || nowTime.equals(meeting.getEndTime()))) {
+                    // Record late fine as pending
+                    Transaction fineTxn = new Transaction();
+                    fineTxn.setMember(memberOpt.get());
+                    fineTxn.setType("FAINI");
+                    fineTxn.setDescription("Faini ya kuchelewa: " + meeting.getName());
+                    fineTxn.setAmount(new BigDecimal("2000"));
+                    fineTxn.setBalance(memberOpt.get().getSavingsBalance());
+                    fineTxn.setDate(LocalDate.now());
+                    fineTxn.setStatus("PENDING");
+                    transactionRepository.save(fineTxn);
+                }
+            }
+
+            // Record attendance transaction and increment meeting count
+            recordTransaction(memberOpt.get(), "ATTENDANCE", "Mahudhurio: " + meeting.getName(), BigDecimal.ZERO, memberOpt.get().getSavingsBalance());
             meeting.setAttended(meeting.getAttended() + 1);
             meetingRepository.save(meeting);
-            
-            // Optional: Record this specific member's attendance in a separate table if needed in future
 
             return ResponseEntity.ok(Map.of("success", true, "message", "Mahudhurio yamerekodiwa kikamilifu!"));
 
@@ -574,5 +597,11 @@ public class MemberApiController {
     public ResponseEntity<?> getMemberAnalytics(Authentication authentication) {
         String email = authentication.getName();
         return ResponseEntity.ok(memberService.getAnalyticsData(email));
+    }
+
+    // 8. Upcoming meetings for members (pollable)
+    @GetMapping("/meetings/upcoming")
+    public ResponseEntity<?> getUpcomingMeetings() {
+        return ResponseEntity.ok(memberService.getUpcomingMeetings());
     }
 }

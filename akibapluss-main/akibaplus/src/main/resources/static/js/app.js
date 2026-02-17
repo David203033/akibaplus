@@ -305,6 +305,37 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
+// Hide/disable sign buttons for meetings that have already ended and mark as past
+function refreshMeetingButtons() {
+  document.querySelectorAll('[data-meeting-id]').forEach(btn => {
+    try {
+      const dateStr = btn.dataset.meetingDate; // format: yyyy-MM-dd
+      const startStr = btn.dataset.meetingStart; // HH:MM:SS
+      const endStr = btn.dataset.meetingEnd; // HH:MM:SS
+      if (!dateStr) return;
+      const meetingDate = new Date(dateStr);
+      const now = new Date();
+      // If meeting is today and has end time, compare
+      if (meetingDate.toDateString() === now.toDateString() && endStr) {
+        const [eh, em] = endStr.split(':');
+        const endTime = new Date(meetingDate.getFullYear(), meetingDate.getMonth(), meetingDate.getDate(), parseInt(eh), parseInt(em || '0'));
+        if (now > endTime) {
+          // disable button and mark as past
+          btn.style.display = 'none';
+          const card = btn.closest('.card');
+          if (card) card.classList.add('meeting-past');
+        }
+      }
+    } catch (e) {
+      console.warn('Error evaluating meeting button', e);
+    }
+  });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  refreshMeetingButtons();
+});
+
 function submitLoanApplication() {
   const btn = document.getElementById('submitBtn');
   btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Inawasilisha...';
@@ -385,19 +416,41 @@ function signAttendance(meetingId, meetingName, latitude, longitude) {
           Math.pow(userLat - latitude, 2) + Math.pow(userLng - longitude, 2)
         ) * 111; // Approximate km conversion
         
-        if (distance < 1) { // Within 1 km
-          // Call backend to record attendance
+        // Use meeting radius if provided on the meeting button (fallback to 200m)
+        let allowedMeters = 200; // default fallback 200m
+        const btn = document.querySelector('[data-meeting-id="' + meetingId + '"]');
+        if (btn && btn.dataset && btn.dataset.meetingRadius) {
+          const r = parseInt(btn.dataset.meetingRadius);
+          if (!isNaN(r) && r > 0) allowedMeters = r;
+        }
+        if (distance <= allowedMeters) {
+          // Call backend to record attendance. Include coordinates so server verifies location and time.
           fetch('/api/meetings/attend', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ meetingId: meetingId })
+            body: JSON.stringify({ meetingId: meetingId, latitude: userLat, longitude: userLng })
           })
           .then(response => {
             if(response.ok) {
               alert('Mahudhurio yamerekodiwa kwa mafanikio! Asante kwa kuhudhuria.');
               console.log('Attendance signed for: ' + meetingName);
+              // Hide the sign button for this meeting and mark card as attended
+              try {
+                const btn = document.querySelector('[data-meeting-id="' + meetingId + '"]');
+                if (btn) {
+                  btn.style.display = 'none';
+                  const card = btn.closest('.card');
+                  if (card) card.classList.add('meeting-attended');
+                }
+              } catch (e) { console.warn('Failed to update meeting UI after sign', e); }
+
+              // Reload page to surface pending fines and updated meeting lists
+              setTimeout(() => window.location.reload(), 700);
+
             } else {
-              alert('Imeshindwa kurekodi mahudhurio. Tafadhali jaribu tena.');
+              response.json().then(j => alert(j.message || 'Imeshindwa kurekodi mahudhurio. Tafadhali jaribu tena.')).catch(() => {
+                alert('Imeshindwa kurekodi mahudhurio. Tafadhali jaribu tena.');
+              });
             }
           });
         } else {
@@ -877,6 +930,8 @@ document.addEventListener('DOMContentLoaded', function() {
   if (document.getElementById('analytics') && document.getElementById('analytics').classList.contains('active')) {
     initializeAnalyticsCharts();
   }
+  // Start polling for newly added meetings so users see admin-created meetings without manual refresh
+  startUpcomingMeetingsPoll();
 });
 
 // Export functions to window to ensure access from HTML
@@ -907,3 +962,42 @@ window.preparePayment = preparePayment;
 window.confirmPenaltyPayment = confirmPenaltyPayment;
 window.signAttendance = signAttendance;
 window.filterStatements = filterStatements;
+
+// If any loadPage calls were queued before the real implementation loaded, process them now
+try {
+  if (window._loadPageQueue && Array.isArray(window._loadPageQueue) && window._loadPageQueue.length) {
+    const queued = window._loadPageQueue.slice();
+    window._loadPageQueue = [];
+    queued.forEach(pid => {
+      try { window.loadPage(pid); } catch (e) { console.warn('queued loadPage failed for', pid, e); }
+    });
+  }
+} catch (e) {
+  console.warn('Error processing queued loadPage calls', e);
+}
+
+// Poll upcoming meetings endpoint and reload page if new meetings are detected
+function startUpcomingMeetingsPoll() {
+  try {
+    const poll = async () => {
+      try {
+        const resp = await fetch('/api/meetings/upcoming');
+        if (!resp.ok) return;
+        const data = await resp.json();
+        // Count meeting cards in DOM
+        const domCount = document.querySelectorAll('#upcoming-meetings [data-meeting-id]').length;
+        const serverCount = Array.isArray(data) ? data.length : 0;
+        if (serverCount !== domCount) {
+          // simple strategy: reload to refresh rendered meetings
+          window.location.reload();
+        }
+      } catch (e) {
+        // ignore transient errors
+      }
+    };
+    // poll every 30 seconds
+    setInterval(poll, 30000);
+  } catch (e) {
+    console.warn('Failed to start meetings poll', e);
+  }
+}
